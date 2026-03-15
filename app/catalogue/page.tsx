@@ -25,7 +25,7 @@ export default function CataloguePage() {
       if (data) {
         setCards(data)
         setFiltered(data)
-        const univs = [...new Set(data.map((c: any) => c.universe))] as string[]
+        const univs = Array.from(new Set(data.map((c: any) => c.universe))) as string[]
         setUniverses(univs)
       }
       setLoading(false)
