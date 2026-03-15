@@ -209,7 +209,6 @@ export default function CataloguePage() {
                   )}
                 </div>
 
-                {/* Bouton Visu 3D */}
                 {selected.image_url && (
                   
                     href={`/card-3d?url=${encodeURIComponent(selected.image_url)}`}
