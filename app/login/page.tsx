@@ -2,10 +2,8 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 
 export default function AuthPage() {
-  const router = useRouter()
   const supabase = createClient()
 
   const [tab, setTab] = useState<'login' | 'register'>('login')
@@ -25,11 +23,10 @@ export default function AuthPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setError('Email ou mot de passe incorrect.')
+      setLoading(false)
     } else {
-      router.push('/')
-      router.refresh()
+      window.location.href = '/'
     }
-    setLoading(false)
   }
 
   async function handleRegister() {
@@ -65,23 +62,9 @@ export default function AuthPage() {
     if (error) {
       setError(error.message)
     } else {
-      setSuccess('Compte créé ! Vérifie ton email pour confirmer.')
+      setSuccess('Compte créé ! Tu peux maintenant te connecter.')
     }
     setLoading(false)
-  }
-
-  async function handleGoogle() {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` }
-    })
-  }
-
-  async function handleDiscord() {
-    await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-      options: { redirectTo: `${window.location.origin}/auth/callback` }
-    })
   }
 
   return (
@@ -194,15 +177,6 @@ export default function AuthPage() {
           }}
         >
           {loading ? 'Chargement...' : tab === 'login' ? 'Se connecter' : 'Créer mon compte'}
-        </button>
-
-        <div style={{ height: '1px', background: 'rgba(201,168,76,0.2)', margin: '1.2rem 0' }} />
-
-        <button onClick={handleGoogle} style={{ width: '100%', padding: '10px', background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: '#e8e0cc', cursor: 'pointer', marginBottom: '8px', fontSize: '0.9rem' }}>
-          🔵 Continuer avec Google
-        </button>
-        <button onClick={handleDiscord} style={{ width: '100%', padding: '10px', background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: '#e8e0cc', cursor: 'pointer', fontSize: '0.9rem' }}>
-          💜 Continuer avec Discord
         </button>
       </div>
     </main>
