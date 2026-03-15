@@ -48,7 +48,7 @@ export default function Card3D() {
       const loader = new THREE.TextureLoader()
       loader.crossOrigin = 'anonymous'
       loader.load(
-        'https://res.cloudinary.com/daowtjque/image/upload/v1773611837/Strelitzia_Apus_anmwdv.webp',
+        'https://res.cloudinary.com/daowtjque/image/upload/v1773611817/Berserk1_acfvqf.webp',
         (texture: any) => {
           // Carte — ratio standard 280x400
           const geometry = new THREE.PlaneGeometry(2, 2.85)
