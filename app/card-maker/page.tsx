@@ -9,6 +9,7 @@ export default function CardMaker() {
   const [effect, setEffect] = useState('Effet de la carte...')
   const [imageUrl, setImageUrl] = useState('')
   const [cardType, setCardType] = useState('monster')
+  const [template, setTemplate] = useState('standard')
 
   function downloadSVG() {
     const svg = document.getElementById('card-svg')
@@ -22,48 +23,115 @@ export default function CardMaker() {
   }
 
   const typeColor = {
-    monster: '#c9a84c',
-    spell: '#4cc94c',
-    trap: '#c94ca8',
-    fusion: '#9b4cc9',
-    ritual: '#4ca8c9'
-  }[cardType]
+    monster: '#c9a84c', spell: '#4cc94c', trap: '#c94ca8', fusion: '#9b4cc9', ritual: '#4ca8c9'
+  }[cardType] as string
 
   const typeBg = {
-    monster: 'rgba(201,168,76,0.15)',
-    spell: 'rgba(76,201,76,0.2)',
-    trap: 'rgba(201,76,168,0.2)',
-    fusion: 'rgba(155,76,201,0.2)',
-    ritual: 'rgba(76,168,201,0.2)'
-  }[cardType]
+    monster: 'rgba(201,168,76,0.15)', spell: 'rgba(76,201,76,0.2)', trap: 'rgba(201,76,168,0.2)', fusion: 'rgba(155,76,201,0.2)', ritual: 'rgba(76,168,201,0.2)'
+  }[cardType] as string
 
   const typeLabel = {
-    monster: 'MONSTRE',
-    spell: 'SORT',
-    trap: 'PIÈGE',
-    fusion: 'FUSION',
-    ritual: 'RITUEL'
-  }[cardType]
+    monster: 'MONSTRE', spell: 'SORT', trap: 'PIÈGE', fusion: 'FUSION', ritual: 'RITUEL'
+  }[cardType] as string
 
   const isMonster = cardType === 'monster' || cardType === 'fusion' || cardType === 'ritual'
+
+  const sharedDefs = (
+    <defs>
+      <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#c9a84c" stopOpacity="1" />
+        <stop offset="50%" stopColor="#f0d080" stopOpacity="1" />
+        <stop offset="100%" stopColor="#8a6a1e" stopOpacity="1" />
+      </linearGradient>
+      <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#0a0a14" stopOpacity="1" />
+        <stop offset="100%" stopColor="#0f0f1e" stopOpacity="1" />
+      </linearGradient>
+      <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#1a1400" stopOpacity="1" />
+        <stop offset="100%" stopColor="#2a2000" stopOpacity="1" />
+      </linearGradient>
+      <linearGradient id="statGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#0a0a14" stopOpacity="1" />
+        <stop offset="50%" stopColor="#1a1400" stopOpacity="1" />
+        <stop offset="100%" stopColor="#0a0a14" stopOpacity="1" />
+      </linearGradient>
+      <linearGradient id="overlayGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#0a0a14" stopOpacity="0" />
+        <stop offset="60%" stopColor="#0a0a14" stopOpacity="0" />
+        <stop offset="100%" stopColor="#0a0a14" stopOpacity="0.92" />
+      </linearGradient>
+      <radialGradient id="glowCenter" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#c9a84c" stopOpacity="0.08" />
+        <stop offset="60%" stopColor="#9b4cc9" stopOpacity="0.04" />
+        <stop offset="100%" stopColor="#0a0a14" stopOpacity="0" />
+      </radialGradient>
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <clipPath id="artClip">
+        <rect x="18" y="70" width="244" height="200" rx="4"/>
+      </clipPath>
+      <clipPath id="fullArtClip">
+        <rect x="2" y="2" width="276" height="396" rx="11"/>
+      </clipPath>
+    </defs>
+  )
+
+  const corners = (
+    <>
+      <line x1="8" y1="8" x2="36" y2="8" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
+      <line x1="8" y1="8" x2="8" y2="36" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
+      <line x1="272" y1="8" x2="244" y2="8" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
+      <line x1="272" y1="8" x2="272" y2="36" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
+      <line x1="8" y1="392" x2="36" y2="392" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
+      <line x1="8" y1="392" x2="8" y2="366" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
+      <line x1="272" y1="392" x2="244" y2="392" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
+      <line x1="272" y1="392" x2="272" y2="366" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
+      <circle cx="8" cy="8" r="3" fill="#c9a84c" opacity="0.6"/>
+      <circle cx="272" cy="8" r="3" fill="#c9a84c" opacity="0.6"/>
+      <circle cx="8" cy="392" r="3" fill="#c9a84c" opacity="0.6"/>
+      <circle cx="272" cy="392" r="3" fill="#c9a84c" opacity="0.6"/>
+    </>
+  )
+
+  const statsBlock = isMonster ? (
+    <>
+      <rect x="14" y="363" width="116" height="26" rx="4" fill="url(#statGrad)" stroke="rgba(201,168,76,0.35)" strokeWidth="1"/>
+      <text x="28" y="380" fontFamily="serif" fontSize="9" fill="rgba(201,168,76,0.6)" letterSpacing="1">ATK</text>
+      <text x="122" y="380" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{atk}</text>
+      <rect x="150" y="363" width="116" height="26" rx="4" fill="url(#statGrad)" stroke="rgba(201,168,76,0.35)" strokeWidth="1"/>
+      <text x="164" y="380" fontFamily="serif" fontSize="9" fill="rgba(201,168,76,0.6)" letterSpacing="1">DEF</text>
+      <text x="258" y="380" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{def}</text>
+    </>
+  ) : (
+    <text x="140" y="382" textAnchor="middle" fontFamily="serif" fontSize="10" fill="rgba(201,168,76,0.4)" letterSpacing="2">
+      {cardType === 'spell' ? '✦ CARTE SORT ✦' : '✦ CARTE PIÈGE ✦'}
+    </text>
+  )
 
   return (
     <main style={{ minHeight: '100vh', background: '#0a0a14', color: '#e8e0cc', fontFamily: 'sans-serif', padding: '20px' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap');
         .input-field {
-          width: 100%;
-          padding: 8px 12px;
-          background: #141428;
-          border: 1px solid rgba(201,168,76,0.3);
-          border-radius: 4px;
-          color: #e8e0cc;
-          font-size: 0.88rem;
-          box-sizing: border-box;
-          margin-bottom: 10px;
+          width: 100%; padding: 8px 12px; background: #141428;
+          border: 1px solid rgba(201,168,76,0.3); border-radius: 4px;
+          color: #e8e0cc; font-size: 0.88rem; box-sizing: border-box; margin-bottom: 10px;
         }
         .input-field:focus { outline: none; border-color: rgba(201,168,76,0.7); }
         label { display: block; font-size: 0.72rem; color: rgba(201,168,76,0.6); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+        .template-btn {
+          flex: 1; padding: 8px; background: transparent;
+          border: 1px solid rgba(201,168,76,0.2); border-radius: 4px;
+          color: rgba(232,224,204,0.5); font-size: 0.78rem; cursor: pointer;
+          transition: all 0.2s; letter-spacing: 0.05em;
+        }
+        .template-btn.active {
+          background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.6); color: #c9a84c;
+        }
+        .template-btn:hover { border-color: rgba(201,168,76,0.4); color: #e8e0cc; }
       `}</style>
 
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -77,6 +145,12 @@ export default function CardMaker() {
           {/* FORMULAIRE */}
           <div style={{ flex: 1, minWidth: '260px', background: '#0f0f1e', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '20px' }}>
 
+            <label>Template</label>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <button className={`template-btn ${template === 'standard' ? 'active' : ''}`} onClick={() => setTemplate('standard')}>Standard</button>
+              <button className={`template-btn ${template === 'fullart' ? 'active' : ''}`} onClick={() => setTemplate('fullart')}>Full Art</button>
+            </div>
+
             <label>Type de carte</label>
             <select value={cardType} onChange={e => setCardType(e.target.value)} className="input-field">
               <option value="monster">Monstre</option>
@@ -89,7 +163,7 @@ export default function CardMaker() {
             <label>Nom de la carte</label>
             <input className="input-field" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Goku Ultra Instinct" />
 
-            <label>URL de l'illustration (Cloudinary)</label>
+            <label>URL illustration (Cloudinary)</label>
             <input className="input-field" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://res.cloudinary.com/..." />
 
             <label>Effet / Description</label>
@@ -115,127 +189,119 @@ export default function CardMaker() {
 
           {/* PREVIEW */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-            <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Aperçu</div>
+            <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              Aperçu — {template === 'standard' ? 'Standard' : 'Full Art'}
+            </div>
 
-            <svg id="card-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 400" width="280" height="400">
-              <defs>
-                <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#c9a84c" stopOpacity="1" />
-                  <stop offset="50%" stopColor="#f0d080" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#8a6a1e" stopOpacity="1" />
-                </linearGradient>
-                <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#0a0a14" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#0f0f1e" stopOpacity="1" />
-                </linearGradient>
-                <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#1a1400" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#2a2000" stopOpacity="1" />
-                </linearGradient>
-                <linearGradient id="statGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#0a0a14" stopOpacity="1" />
-                  <stop offset="50%" stopColor="#1a1400" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#0a0a14" stopOpacity="1" />
-                </linearGradient>
-                <radialGradient id="glowCenter" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#c9a84c" stopOpacity="0.08" />
-                  <stop offset="60%" stopColor="#9b4cc9" stopOpacity="0.04" />
-                  <stop offset="100%" stopColor="#0a0a14" stopOpacity="0" />
-                </radialGradient>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                  <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-                <clipPath id="artClip">
-                  <rect x="18" y="70" width="244" height="200" rx="4"/>
-                </clipPath>
-              </defs>
-
-              {/* Fond */}
-              <rect width="280" height="400" rx="12" fill="url(#bgGrad)"/>
-              <rect width="280" height="400" rx="12" fill="url(#glowCenter)"/>
-
-              {/* Bordures */}
-              <rect x="2" y="2" width="276" height="396" rx="11" fill="none" stroke="url(#borderGrad)" strokeWidth="3" filter="url(#glow)"/>
-              <rect x="8" y="8" width="264" height="384" rx="8" fill="none" stroke="rgba(201,168,76,0.3)" strokeWidth="1"/>
-
-              {/* Coins */}
-              <line x1="8" y1="8" x2="36" y2="8" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
-              <line x1="8" y1="8" x2="8" y2="36" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
-              <line x1="272" y1="8" x2="244" y2="8" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
-              <line x1="272" y1="8" x2="272" y2="36" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
-              <line x1="8" y1="392" x2="36" y2="392" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
-              <line x1="8" y1="392" x2="8" y2="366" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
-              <line x1="272" y1="392" x2="244" y2="392" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
-              <line x1="272" y1="392" x2="272" y2="366" stroke="rgba(201,168,76,0.5)" strokeWidth="1.5"/>
-              <circle cx="8" cy="8" r="3" fill="#c9a84c" opacity="0.6"/>
-              <circle cx="272" cy="8" r="3" fill="#c9a84c" opacity="0.6"/>
-              <circle cx="8" cy="392" r="3" fill="#c9a84c" opacity="0.6"/>
-              <circle cx="272" cy="392" r="3" fill="#c9a84c" opacity="0.6"/>
-
-              {/* Nom */}
-              <rect x="14" y="14" width="252" height="32" rx="5" fill="url(#headerGrad)" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
-              <text x="140" y="35" textAnchor="middle" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)" letterSpacing="1">
-                {name.length > 22 ? name.substring(0, 22) + '...' : name}
-              </text>
-
-              {/* Badge type */}
-              <rect x="14" y="50" width="60" height="16" rx="3" fill={typeBg} stroke={typeColor} strokeWidth="0.5" strokeOpacity="0.4"/>
-              <text x="44" y="61" textAnchor="middle" fontFamily="sans-serif" fontSize="8" letterSpacing="0.5" fill={typeColor}>
-                {typeLabel}
-              </text>
-
-              {/* Zone illustration */}
-              <rect x="18" y="70" width="244" height="200" rx="4" fill="rgba(255,255,255,0.02)" stroke="rgba(201,168,76,0.2)" strokeWidth="1"/>
-              {imageUrl ? (
-                <image href={imageUrl} x="18" y="70" width="244" height="200" clipPath="url(#artClip)" preserveAspectRatio="xMidYMid slice"/>
-              ) : (
-                <>
-                  <circle cx="140" cy="170" r="55" fill="none" stroke="rgba(201,168,76,0.06)" strokeWidth="1"/>
-                  <circle cx="140" cy="170" r="38" fill="none" stroke="rgba(155,76,201,0.05)" strokeWidth="1"/>
-                  <circle cx="140" cy="170" r="22" fill="none" stroke="rgba(76,201,168,0.04)" strokeWidth="1"/>
-                  <text x="140" y="165" textAnchor="middle" fontFamily="sans-serif" fontSize="10" fill="rgba(201,168,76,0.2)">ILLUSTRATION</text>
-                  <text x="140" y="180" textAnchor="middle" fontFamily="sans-serif" fontSize="8" fill="rgba(201,168,76,0.15)">Colle une URL Cloudinary</text>
-                </>
-              )}
-
-              {/* Séparateur */}
-              <line x1="18" y1="274" x2="262" y2="274" stroke="rgba(201,168,76,0.3)" strokeWidth="1"/>
-              <circle cx="140" cy="274" r="3" fill="#c9a84c" opacity="0.5"/>
-              <circle cx="120" cy="274" r="1.5" fill="#c9a84c" opacity="0.25"/>
-              <circle cx="160" cy="274" r="1.5" fill="#c9a84c" opacity="0.25"/>
-
-              {/* Zone effet */}
-              <rect x="14" y="280" width="252" height="70" rx="4" fill="rgba(201,168,76,0.02)" stroke="rgba(201,168,76,0.12)" strokeWidth="1"/>
-              <text fontFamily="sans-serif" fontSize="8" fill="rgba(232,224,204,0.7)">
-                <tspan x="22" y="294">{effect.substring(0, 48)}</tspan>
-                <tspan x="22" dy="11">{effect.substring(48, 96)}</tspan>
-                <tspan x="22" dy="11">{effect.substring(96, 144)}</tspan>
-                <tspan x="22" dy="11">{effect.substring(144, 192)}</tspan>
-                <tspan x="22" dy="11">{effect.substring(192, 240)}</tspan>
-              </text>
-
-              {/* Séparateur bas */}
-              <line x1="18" y1="355" x2="262" y2="355" stroke="rgba(201,168,76,0.3)" strokeWidth="1"/>
-              <circle cx="140" cy="355" r="3" fill="#c9a84c" opacity="0.5"/>
-
-              {/* ATK / DEF */}
-              {isMonster && (
-                <>
-                  <rect x="14" y="363" width="116" height="26" rx="4" fill="url(#statGrad)" stroke="rgba(201,168,76,0.35)" strokeWidth="1"/>
-                  <text x="28" y="380" fontFamily="serif" fontSize="9" fill="rgba(201,168,76,0.6)" letterSpacing="1">ATK</text>
-                  <text x="122" y="380" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{atk}</text>
-                  <rect x="150" y="363" width="116" height="26" rx="4" fill="url(#statGrad)" stroke="rgba(201,168,76,0.35)" strokeWidth="1"/>
-                  <text x="164" y="380" fontFamily="serif" fontSize="9" fill="rgba(201,168,76,0.6)" letterSpacing="1">DEF</text>
-                  <text x="258" y="380" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{def}</text>
-                </>
-              )}
-              {!isMonster && (
-                <text x="140" y="382" textAnchor="middle" fontFamily="serif" fontSize="10" fill="rgba(201,168,76,0.4)" letterSpacing="2">
-                  {cardType === 'spell' ? '✦ CARTE SORT ✦' : '✦ CARTE PIÈGE ✦'}
+            {/* ── TEMPLATE STANDARD ── */}
+            {template === 'standard' && (
+              <svg id="card-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 400" width="280" height="400">
+                {sharedDefs}
+                <rect width="280" height="400" rx="12" fill="url(#bgGrad)"/>
+                <rect width="280" height="400" rx="12" fill="url(#glowCenter)"/>
+                <rect x="2" y="2" width="276" height="396" rx="11" fill="none" stroke="url(#borderGrad)" strokeWidth="3" filter="url(#glow)"/>
+                <rect x="8" y="8" width="264" height="384" rx="8" fill="none" stroke="rgba(201,168,76,0.3)" strokeWidth="1"/>
+                {corners}
+                <rect x="14" y="14" width="252" height="32" rx="5" fill="url(#headerGrad)" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
+                <text x="140" y="35" textAnchor="middle" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)" letterSpacing="1">
+                  {name.length > 22 ? name.substring(0, 22) + '...' : name}
                 </text>
-              )}
-            </svg>
+                <rect x="14" y="50" width="60" height="16" rx="3" fill={typeBg} stroke={typeColor} strokeWidth="0.5" strokeOpacity="0.4"/>
+                <text x="44" y="61" textAnchor="middle" fontFamily="sans-serif" fontSize="8" letterSpacing="0.5" fill={typeColor}>{typeLabel}</text>
+                <rect x="18" y="70" width="244" height="200" rx="4" fill="rgba(255,255,255,0.02)" stroke="rgba(201,168,76,0.2)" strokeWidth="1"/>
+                {imageUrl ? (
+                  <image href={imageUrl} x="18" y="70" width="244" height="200" clipPath="url(#artClip)" preserveAspectRatio="xMidYMid slice"/>
+                ) : (
+                  <>
+                    <circle cx="140" cy="170" r="55" fill="none" stroke="rgba(201,168,76,0.06)" strokeWidth="1"/>
+                    <circle cx="140" cy="170" r="38" fill="none" stroke="rgba(155,76,201,0.05)" strokeWidth="1"/>
+                    <text x="140" y="165" textAnchor="middle" fontFamily="sans-serif" fontSize="10" fill="rgba(201,168,76,0.2)">ILLUSTRATION</text>
+                    <text x="140" y="180" textAnchor="middle" fontFamily="sans-serif" fontSize="8" fill="rgba(201,168,76,0.15)">Colle une URL Cloudinary</text>
+                  </>
+                )}
+                <line x1="18" y1="274" x2="262" y2="274" stroke="rgba(201,168,76,0.3)" strokeWidth="1"/>
+                <circle cx="140" cy="274" r="3" fill="#c9a84c" opacity="0.5"/>
+                <circle cx="120" cy="274" r="1.5" fill="#c9a84c" opacity="0.25"/>
+                <circle cx="160" cy="274" r="1.5" fill="#c9a84c" opacity="0.25"/>
+                <rect x="14" y="280" width="252" height="70" rx="4" fill="rgba(201,168,76,0.02)" stroke="rgba(201,168,76,0.12)" strokeWidth="1"/>
+                <text fontFamily="sans-serif" fontSize="8" fill="rgba(232,224,204,0.7)">
+                  <tspan x="22" y="294">{effect.substring(0, 48)}</tspan>
+                  <tspan x="22" dy="11">{effect.substring(48, 96)}</tspan>
+                  <tspan x="22" dy="11">{effect.substring(96, 144)}</tspan>
+                  <tspan x="22" dy="11">{effect.substring(144, 192)}</tspan>
+                  <tspan x="22" dy="11">{effect.substring(192, 240)}</tspan>
+                </text>
+                <line x1="18" y1="355" x2="262" y2="355" stroke="rgba(201,168,76,0.3)" strokeWidth="1"/>
+                <circle cx="140" cy="355" r="3" fill="#c9a84c" opacity="0.5"/>
+                {statsBlock}
+              </svg>
+            )}
+
+            {/* ── TEMPLATE FULL ART ── */}
+            {template === 'fullart' && (
+              <svg id="card-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 400" width="280" height="400">
+                {sharedDefs}
+
+                {/* Illustration full art en fond */}
+                {imageUrl ? (
+                  <image href={imageUrl} x="2" y="2" width="276" height="396" clipPath="url(#fullArtClip)" preserveAspectRatio="xMidYMid slice"/>
+                ) : (
+                  <rect width="280" height="400" rx="12" fill="url(#bgGrad)"/>
+                )}
+
+                {/* Overlay dégradé bas pour lisibilité */}
+                <rect width="280" height="400" rx="12" fill="url(#overlayGrad)"/>
+
+                {/* Légère teinte sombre en haut pour le nom */}
+                <rect width="280" height="60" rx="12" fill="rgba(0,0,0,0.55)"/>
+                <rect x="0" y="12" width="280" height="48" fill="rgba(0,0,0,0.55)"/>
+
+                {/* Bordures */}
+                <rect x="2" y="2" width="276" height="396" rx="11" fill="none" stroke="url(#borderGrad)" strokeWidth="3" filter="url(#glow)"/>
+                <rect x="8" y="8" width="264" height="384" rx="8" fill="none" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
+                {corners}
+
+                {/* Nom en haut */}
+                <rect x="14" y="14" width="252" height="32" rx="5" fill="rgba(10,10,20,0.7)" stroke="rgba(201,168,76,0.5)" strokeWidth="1"/>
+                <text x="140" y="35" textAnchor="middle" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)" letterSpacing="1">
+                  {name.length > 22 ? name.substring(0, 22) + '...' : name}
+                </text>
+
+                {/* Badge type */}
+                <rect x="14" y="50" width="60" height="16" rx="3" fill="rgba(0,0,0,0.6)" stroke={typeColor} strokeWidth="0.5" strokeOpacity="0.6"/>
+                <text x="44" y="61" textAnchor="middle" fontFamily="sans-serif" fontSize="8" letterSpacing="0.5" fill={typeColor}>{typeLabel}</text>
+
+                {/* Zone inférieure — effet + stats sur overlay */}
+                <rect x="14" y="290" width="252" height="60" rx="4" fill="rgba(10,10,20,0.75)" stroke="rgba(201,168,76,0.2)" strokeWidth="1"/>
+                <text fontFamily="sans-serif" fontSize="8" fill="rgba(232,224,204,0.8)">
+                  <tspan x="22" y="304">{effect.substring(0, 48)}</tspan>
+                  <tspan x="22" dy="11">{effect.substring(48, 96)}</tspan>
+                  <tspan x="22" dy="11">{effect.substring(96, 144)}</tspan>
+                  <tspan x="22" dy="11">{effect.substring(144, 192)}</tspan>
+                </text>
+
+                {/* Séparateur */}
+                <line x1="18" y1="356" x2="262" y2="356" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
+                <circle cx="140" cy="356" r="3" fill="#c9a84c" opacity="0.6"/>
+
+                {/* Stats */}
+                {isMonster && (
+                  <>
+                    <rect x="14" y="363" width="116" height="26" rx="4" fill="rgba(10,10,20,0.8)" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
+                    <text x="28" y="380" fontFamily="serif" fontSize="9" fill="rgba(201,168,76,0.6)" letterSpacing="1">ATK</text>
+                    <text x="122" y="380" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{atk}</text>
+                    <rect x="150" y="363" width="116" height="26" rx="4" fill="rgba(10,10,20,0.8)" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
+                    <text x="164" y="380" fontFamily="serif" fontSize="9" fill="rgba(201,168,76,0.6)" letterSpacing="1">DEF</text>
+                    <text x="258" y="380" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{def}</text>
+                  </>
+                )}
+                {!isMonster && (
+                  <text x="140" y="382" textAnchor="middle" fontFamily="serif" fontSize="10" fill="rgba(201,168,76,0.5)" letterSpacing="2">
+                    {cardType === 'spell' ? '✦ CARTE SORT ✦' : '✦ CARTE PIÈGE ✦'}
+                  </text>
+                )}
+              </svg>
+            )}
           </div>
         </div>
       </div>
