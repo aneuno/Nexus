@@ -48,7 +48,6 @@ export default function HomePage() {
         @keyframes spin3 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100% { opacity: 0.5; transform: translate(-50%,-50%) scale(1); } 50% { opacity: 1; transform: translate(-50%,-50%) scale(1.15); } }
         @keyframes float { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
-        @keyframes navHover { to { border-color: rgba(201,168,76,0.8); background: rgba(201,168,76,0.12); } }
 
         .nav-main-btn {
           display: flex;
@@ -114,7 +113,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* BARRE DU HAUT — Classement, Amis, Profil */}
+      {/* BARRE DU HAUT */}
       <div style={{ background: 'rgba(10,10,20,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', padding: '8px 20px', display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
         <a href="/leaderboard" className="nav-top-btn">🏆 Classement</a>
         <a href="/friends" className="nav-top-btn">👥 Amis</a>
@@ -128,8 +127,8 @@ export default function HomePage() {
       {/* CONTENU PRINCIPAL */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
-        {/* SIDEBAR GAUCHE — Jouer, Inventaire, Boutique */}
-        <div style={{ width: '220px', flexShrink: 0, borderRight: '1px solid rgba(201,168,76,0.15)', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(10,10,20,0.8)' }}>
+        {/* SIDEBAR GAUCHE */}
+        <div style={{ width: '220px', flexShrink: 0, borderRight: '1px solid rgba(201,168,76,0.15)', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(10,10,20,0.8)', overflowY: 'auto' }}>
           <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'rgba(201,168,76,0.5)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '6px', paddingLeft: '4px' }}>Navigation</div>
 
           <a href="/play" className="nav-main-btn">
@@ -155,74 +154,39 @@ export default function HomePage() {
               <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Boosters & cosmétiques</div>
             </div>
           </a>
+
+          <a href="/card-maker" className="nav-main-btn">
+            <span style={{ fontSize: '1.4rem' }}>🎴</span>
+            <div>
+              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Card Maker</div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Créer une carte</div>
+            </div>
+          </a>
+
+          <a href="/card-3d" className="nav-main-btn">
+            <span style={{ fontSize: '1.4rem' }}>🌀</span>
+            <div>
+              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Visu 3D</div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Aperçu holographique</div>
+            </div>
+          </a>
         </div>
 
         {/* CENTRE — Portail animé */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-
-          {/* Fond radial */}
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, rgba(201,168,76,0.06) 0%, rgba(155,76,201,0.04) 40%, transparent 70%)', pointerEvents: 'none' }} />
 
-          {/* Portail */}
           <div style={{ position: 'relative', width: '280px', height: '280px', animation: 'float 4s ease-in-out infinite' }}>
-
-            {/* Anneau 1 */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              border: '2px solid rgba(201,168,76,0.7)',
-              borderRadius: '50%',
-              animation: 'spin1 10s linear infinite',
-              boxShadow: '0 0 20px rgba(201,168,76,0.3), inset 0 0 20px rgba(201,168,76,0.1)'
-            }} />
-
-            {/* Anneau 2 */}
-            <div style={{
-              position: 'absolute', inset: '14px',
-              border: '1.5px solid rgba(155,76,201,0.5)',
-              borderRadius: '50%',
-              animation: 'spin2 7s linear infinite',
-              boxShadow: '0 0 15px rgba(155,76,201,0.2)'
-            }} />
-
-            {/* Anneau 3 */}
-            <div style={{
-              position: 'absolute', inset: '28px',
-              border: '1px solid rgba(76,201,168,0.4)',
-              borderRadius: '50%',
-              animation: 'spin3 5s linear infinite',
-            }} />
-
-            {/* Anneau 4 */}
-            <div style={{
-              position: 'absolute', inset: '42px',
-              border: '1px solid rgba(201,168,76,0.2)',
-              borderRadius: '50%',
-              animation: 'spin2 12s linear infinite',
-            }} />
-
-            {/* Centre brillant */}
-            <div style={{
-              position: 'absolute',
-              top: '50%', left: '50%',
-              width: '90px', height: '90px',
-              transform: 'translate(-50%, -50%)',
-              background: 'radial-gradient(circle, rgba(201,168,76,0.6) 0%, rgba(155,76,201,0.3) 50%, transparent 70%)',
-              borderRadius: '50%',
-              animation: 'pulse 3s ease-in-out infinite',
-              boxShadow: '0 0 40px rgba(201,168,76,0.4)'
-            }} />
-
-            {/* Texte central */}
-            <div style={{
-              position: 'absolute', top: '50%', left: '50%',
-              transform: 'translate(-50%, -50%)',
-              textAlign: 'center', zIndex: 2
-            }}>
+            <div style={{ position: 'absolute', inset: 0, border: '2px solid rgba(201,168,76,0.7)', borderRadius: '50%', animation: 'spin1 10s linear infinite', boxShadow: '0 0 20px rgba(201,168,76,0.3), inset 0 0 20px rgba(201,168,76,0.1)' }} />
+            <div style={{ position: 'absolute', inset: '14px', border: '1.5px solid rgba(155,76,201,0.5)', borderRadius: '50%', animation: 'spin2 7s linear infinite', boxShadow: '0 0 15px rgba(155,76,201,0.2)' }} />
+            <div style={{ position: 'absolute', inset: '28px', border: '1px solid rgba(76,201,168,0.4)', borderRadius: '50%', animation: 'spin3 5s linear infinite' }} />
+            <div style={{ position: 'absolute', inset: '42px', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '50%', animation: 'spin2 12s linear infinite' }} />
+            <div style={{ position: 'absolute', top: '50%', left: '50%', width: '90px', height: '90px', transform: 'translate(-50%, -50%)', background: 'radial-gradient(circle, rgba(201,168,76,0.6) 0%, rgba(155,76,201,0.3) 50%, transparent 70%)', borderRadius: '50%', animation: 'pulse 3s ease-in-out infinite', boxShadow: '0 0 40px rgba(201,168,76,0.4)' }} />
+            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', zIndex: 2 }}>
               <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: '#c9a84c', letterSpacing: '0.2em', textTransform: 'uppercase', textShadow: '0 0 10px rgba(201,168,76,0.8)' }}>Nexus</div>
             </div>
           </div>
 
-          {/* Texte de bienvenue */}
           <div style={{ position: 'absolute', bottom: '40px', textAlign: 'center', left: 0, right: 0 }}>
             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#c9a84c', marginBottom: '6px' }}>
               Bienvenue, {profile.username}
