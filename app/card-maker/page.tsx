@@ -56,11 +56,6 @@ export default function CardMaker() {
         <stop offset="50%" stopColor="#1a1400" stopOpacity="1" />
         <stop offset="100%" stopColor="#0a0a14" stopOpacity="1" />
       </linearGradient>
-      <linearGradient id="overlayGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#0a0a14" stopOpacity="0" />
-        <stop offset="60%" stopColor="#0a0a14" stopOpacity="0" />
-        <stop offset="100%" stopColor="#0a0a14" stopOpacity="0.92" />
-      </linearGradient>
       <radialGradient id="glowCenter" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stopColor="#c9a84c" stopOpacity="0.08" />
         <stop offset="60%" stopColor="#9b4cc9" stopOpacity="0.04" />
@@ -96,21 +91,6 @@ export default function CardMaker() {
     </>
   )
 
-  const statsBlock = isMonster ? (
-    <>
-      <rect x="14" y="363" width="116" height="26" rx="4" fill="url(#statGrad)" stroke="rgba(201,168,76,0.35)" strokeWidth="1"/>
-      <text x="28" y="380" fontFamily="serif" fontSize="9" fill="rgba(201,168,76,0.6)" letterSpacing="1">ATK</text>
-      <text x="122" y="380" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{atk}</text>
-      <rect x="150" y="363" width="116" height="26" rx="4" fill="url(#statGrad)" stroke="rgba(201,168,76,0.35)" strokeWidth="1"/>
-      <text x="164" y="380" fontFamily="serif" fontSize="9" fill="rgba(201,168,76,0.6)" letterSpacing="1">DEF</text>
-      <text x="258" y="380" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{def}</text>
-    </>
-  ) : (
-    <text x="140" y="382" textAnchor="middle" fontFamily="serif" fontSize="10" fill="rgba(201,168,76,0.4)" letterSpacing="2">
-      {cardType === 'spell' ? '✦ CARTE SORT ✦' : '✦ CARTE PIÈGE ✦'}
-    </text>
-  )
-
   return (
     <main style={{ minHeight: '100vh', background: '#0a0a14', color: '#e8e0cc', fontFamily: 'sans-serif', padding: '20px' }}>
       <style>{`
@@ -128,9 +108,7 @@ export default function CardMaker() {
           color: rgba(232,224,204,0.5); font-size: 0.78rem; cursor: pointer;
           transition: all 0.2s; letter-spacing: 0.05em;
         }
-        .template-btn.active {
-          background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.6); color: #c9a84c;
-        }
+        .template-btn.active { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.6); color: #c9a84c; }
         .template-btn:hover { border-color: rgba(201,168,76,0.4); color: #e8e0cc; }
       `}</style>
 
@@ -166,8 +144,12 @@ export default function CardMaker() {
             <label>URL illustration (Cloudinary)</label>
             <input className="input-field" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://res.cloudinary.com/..." />
 
-            <label>Effet / Description</label>
-            <textarea className="input-field" value={effect} onChange={e => setEffect(e.target.value)} rows={4} placeholder="Description ou effet de la carte..." style={{ resize: 'vertical' }} />
+            {template === 'standard' && (
+              <>
+                <label>Effet / Description</label>
+                <textarea className="input-field" value={effect} onChange={e => setEffect(e.target.value)} rows={4} placeholder="Description ou effet de la carte..." style={{ resize: 'vertical' }} />
+              </>
+            )}
 
             {isMonster && (
               <div style={{ display: 'flex', gap: '10px' }}>
@@ -233,7 +215,20 @@ export default function CardMaker() {
                 </text>
                 <line x1="18" y1="355" x2="262" y2="355" stroke="rgba(201,168,76,0.3)" strokeWidth="1"/>
                 <circle cx="140" cy="355" r="3" fill="#c9a84c" opacity="0.5"/>
-                {statsBlock}
+                {isMonster ? (
+                  <>
+                    <rect x="14" y="363" width="116" height="26" rx="4" fill="url(#statGrad)" stroke="rgba(201,168,76,0.35)" strokeWidth="1"/>
+                    <text x="28" y="380" fontFamily="serif" fontSize="9" fill="rgba(201,168,76,0.6)" letterSpacing="1">ATK</text>
+                    <text x="122" y="380" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{atk}</text>
+                    <rect x="150" y="363" width="116" height="26" rx="4" fill="url(#statGrad)" stroke="rgba(201,168,76,0.35)" strokeWidth="1"/>
+                    <text x="164" y="380" fontFamily="serif" fontSize="9" fill="rgba(201,168,76,0.6)" letterSpacing="1">DEF</text>
+                    <text x="258" y="380" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{def}</text>
+                  </>
+                ) : (
+                  <text x="140" y="382" textAnchor="middle" fontFamily="serif" fontSize="10" fill="rgba(201,168,76,0.4)" letterSpacing="2">
+                    {cardType === 'spell' ? '✦ CARTE SORT ✦' : '✦ CARTE PIÈGE ✦'}
+                  </text>
+                )}
               </svg>
             )}
 
@@ -241,64 +236,35 @@ export default function CardMaker() {
             {template === 'fullart' && (
               <svg id="card-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 400" width="280" height="400">
                 {sharedDefs}
-
-                {/* Illustration full art en fond */}
                 {imageUrl ? (
                   <image href={imageUrl} x="2" y="2" width="276" height="396" clipPath="url(#fullArtClip)" preserveAspectRatio="xMidYMid slice"/>
                 ) : (
                   <rect width="280" height="400" rx="12" fill="url(#bgGrad)"/>
                 )}
-
-                {/* Overlay dégradé bas pour lisibilité */}
-                <rect width="280" height="400" rx="12" fill="url(#overlayGrad)"/>
-
-                {/* Légère teinte sombre en haut pour le nom */}
                 <rect width="280" height="60" rx="12" fill="rgba(0,0,0,0.55)"/>
                 <rect x="0" y="12" width="280" height="48" fill="rgba(0,0,0,0.55)"/>
-
-                {/* Bordures */}
                 <rect x="2" y="2" width="276" height="396" rx="11" fill="none" stroke="url(#borderGrad)" strokeWidth="3" filter="url(#glow)"/>
                 <rect x="8" y="8" width="264" height="384" rx="8" fill="none" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
                 {corners}
-
-                {/* Nom en haut */}
                 <rect x="14" y="14" width="252" height="32" rx="5" fill="rgba(10,10,20,0.7)" stroke="rgba(201,168,76,0.5)" strokeWidth="1"/>
                 <text x="140" y="35" textAnchor="middle" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)" letterSpacing="1">
                   {name.length > 22 ? name.substring(0, 22) + '...' : name}
                 </text>
-
-                {/* Badge type */}
                 <rect x="14" y="50" width="60" height="16" rx="3" fill="rgba(0,0,0,0.6)" stroke={typeColor} strokeWidth="0.5" strokeOpacity="0.6"/>
                 <text x="44" y="61" textAnchor="middle" fontFamily="sans-serif" fontSize="8" letterSpacing="0.5" fill={typeColor}>{typeLabel}</text>
-
-                {/* Zone inférieure — effet + stats sur overlay */}
-                <rect x="14" y="290" width="252" height="60" rx="4" fill="rgba(10,10,20,0.75)" stroke="rgba(201,168,76,0.2)" strokeWidth="1"/>
-                <text fontFamily="sans-serif" fontSize="8" fill="rgba(232,224,204,0.8)">
-                  <tspan x="22" y="304">{effect.substring(0, 48)}</tspan>
-                  <tspan x="22" dy="11">{effect.substring(48, 96)}</tspan>
-                  <tspan x="22" dy="11">{effect.substring(96, 144)}</tspan>
-                  <tspan x="22" dy="11">{effect.substring(144, 192)}</tspan>
-                </text>
-
-                {/* Séparateur */}
-                <line x1="18" y1="356" x2="262" y2="356" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
-                <circle cx="140" cy="356" r="3" fill="#c9a84c" opacity="0.6"/>
-
-                {/* Stats */}
                 {isMonster && (
                   <>
-                    <rect x="14" y="363" width="116" height="26" rx="4" fill="rgba(10,10,20,0.8)" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
-                    <text x="28" y="380" fontFamily="serif" fontSize="9" fill="rgba(201,168,76,0.6)" letterSpacing="1">ATK</text>
-                    <text x="122" y="380" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{atk}</text>
-                    <rect x="150" y="363" width="116" height="26" rx="4" fill="rgba(10,10,20,0.8)" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
-                    <text x="164" y="380" fontFamily="serif" fontSize="9" fill="rgba(201,168,76,0.6)" letterSpacing="1">DEF</text>
-                    <text x="258" y="380" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{def}</text>
+                    <rect x="0" y="358" width="280" height="42" rx="12" fill="rgba(0,0,0,0.55)"/>
+                    <rect x="0" y="358" width="280" height="28" fill="rgba(0,0,0,0.55)"/>
+                    <line x1="18" y1="358" x2="262" y2="358" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
+                    <circle cx="140" cy="358" r="3" fill="#c9a84c" opacity="0.6"/>
+                    <rect x="14" y="365" width="116" height="26" rx="4" fill="rgba(10,10,20,0.8)" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
+                    <text x="28" y="382" fontFamily="serif" fontSize="9" fill="rgba(201,168,76,0.6)" letterSpacing="1">ATK</text>
+                    <text x="122" y="382" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{atk}</text>
+                    <rect x="150" y="365" width="116" height="26" rx="4" fill="rgba(10,10,20,0.8)" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
+                    <text x="164" y="382" fontFamily="serif" fontSize="9" fill="rgba(201,168,76,0.6)" letterSpacing="1">DEF</text>
+                    <text x="258" y="382" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{def}</text>
                   </>
-                )}
-                {!isMonster && (
-                  <text x="140" y="382" textAnchor="middle" fontFamily="serif" fontSize="10" fill="rgba(201,168,76,0.5)" letterSpacing="2">
-                    {cardType === 'spell' ? '✦ CARTE SORT ✦' : '✦ CARTE PIÈGE ✦'}
-                  </text>
                 )}
               </svg>
             )}
