@@ -192,7 +192,7 @@ export default function HomePage() {
               Bienvenue, {profile.username}
             </div>
             <div style={{ fontSize: '0.78rem', color: 'rgba(232,224,204,0.4)', letterSpacing: '0.1em' }}>
-              Le multivers t'attend
+              Gingembre.
             </div>
           </div>
         </div>
