@@ -76,11 +76,18 @@ export default function CataloguePage() {
         }
         .filter-select:focus { border-color: rgba(201,168,76,0.7); }
         .card-thumb {
-          background: #0f0f1e; border: 1px solid rgba(201,168,76,0.2);
-          border-radius: 6px; padding: 8px; cursor: pointer;
-          transition: all 0.2s; display: flex; flex-direction: column; gap: 6px;
+          background: transparent;
+          border-radius: 8px;
+          padding: 0;
+          cursor: pointer;
+          transition: all 0.2s;
+          overflow: hidden;
         }
-        .card-thumb:hover { border-color: rgba(201,168,76,0.6); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+        .card-thumb:hover {
+          transform: translateY(-4px) scale(1.03);
+          filter: brightness(1.15);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
         .modal-overlay {
           position: fixed; inset: 0; background: rgba(0,0,0,0.75);
           display: flex; align-items: center; justify-content: center;
@@ -147,27 +154,21 @@ export default function CataloguePage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '12px' }}>
             {filtered.map(card => (
               <div key={card.id} className="card-thumb" onClick={() => setSelected(card)}>
-                {/* Illustration */}
                 <div style={{
-                  width: '100%', aspectRatio: '0.72',
-                  borderRadius: '4px', overflow: 'hidden',
+                  width: '100%',
+                  aspectRatio: '0.72',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
                   background: '#141428',
+                  border: `1px solid ${rarityColor[card.rarity] || 'rgba(201,168,76,0.2)'}60`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: `1px solid ${rarityColor[card.rarity] || 'rgba(201,168,76,0.2)'}40`
+                  boxShadow: `0 0 8px ${rarityColor[card.rarity] || 'rgba(201,168,76,0.2)'}30`
                 }}>
                   {card.image_url ? (
                     <img src={card.image_url} alt={card.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ fontSize: '2rem', opacity: 0.3 }}>🎴</div>
+                    <div style={{ fontSize: '2.5rem', opacity: 0.2 }}>🎴</div>
                   )}
-                </div>
-                {/* Nom */}
-                <div style={{ fontSize: '0.7rem', color: '#e8e0cc', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'Rajdhani, sans-serif' }}>
-                  {card.name}
-                </div>
-                {/* Rareté */}
-                <div style={{ fontSize: '0.62rem', color: rarityColor[card.rarity] || '#c9a84c', textAlign: 'center', letterSpacing: '0.05em' }}>
-                  {rarityLabel[card.rarity] || card.rarity}
                 </div>
               </div>
             ))}
@@ -182,7 +183,6 @@ export default function CataloguePage() {
             <button onClick={() => setSelected(null)} style={{ position: 'absolute', top: '12px', right: '12px', background: 'transparent', border: 'none', color: 'rgba(201,168,76,0.5)', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
 
             <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-              {/* Image */}
               <div style={{ width: '120px', flexShrink: 0 }}>
                 <div style={{ width: '120px', height: '168px', borderRadius: '6px', overflow: 'hidden', background: '#141428', border: `1px solid ${rarityColor[selected.rarity]}40`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {selected.image_url ? (
@@ -193,7 +193,6 @@ export default function CataloguePage() {
                 </div>
               </div>
 
-              {/* Infos */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#c9a84c', marginBottom: '4px' }}>{selected.name}</div>
                 <div style={{ fontSize: '0.75rem', color: rarityColor[selected.rarity], marginBottom: '8px' }}>{rarityLabel[selected.rarity]}</div>
