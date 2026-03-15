@@ -12,8 +12,10 @@ export default function Card3D() {
   const [effect, setEffect] = useState('none')
   const [bgColor, setBgColor] = useState('#0a0a14')
   const [particleColor, setParticleColor] = useState('#c9a84c')
-  const [imageUrl, setImageUrl] = useState('https://res.cloudinary.com/daowtjque/image/upload/v1773541131/Strelitzia_V2_upflzl.png')
-  const [inputUrl, setInputUrl] = useState('https://res.cloudinary.com/daowtjque/image/upload/v1773541131/Strelitzia_V2_upflzl.png')
+const defaultUrl = 'https://res.cloudinary.com/daowtjque/image/upload/v1773541131/Strelitzia_V2_upflzl.png'
+const urlParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('url') || defaultUrl : defaultUrl
+const [imageUrl, setImageUrl] = useState(urlParam)
+const [inputUrl, setInputUrl] = useState(urlParam)
 
   function hexToInt(hex: string) {
     return parseInt(hex.replace('#', ''), 16)
