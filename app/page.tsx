@@ -42,56 +42,28 @@ export default function HomePage() {
     <main style={{ minHeight: '100vh', background: '#0a0a14', color: '#e8e0cc', fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Rajdhani:wght@400;500;600&display=swap');
-
         @keyframes spin1 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes spin2 { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
         @keyframes spin3 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100% { opacity: 0.5; transform: translate(-50%,-50%) scale(1); } 50% { opacity: 1; transform: translate(-50%,-50%) scale(1.15); } }
         @keyframes float { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
-
         .nav-main-btn {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          padding: 16px 20px;
-          background: rgba(201,168,76,0.04);
-          border: 1px solid rgba(201,168,76,0.2);
-          border-radius: 8px;
-          color: #e8e0cc;
-          text-decoration: none;
-          transition: all 0.25s ease;
-          cursor: pointer;
-          width: 100%;
+          display: flex; align-items: center; gap: 14px; padding: 16px 20px;
+          background: rgba(201,168,76,0.04); border: 1px solid rgba(201,168,76,0.2);
+          border-radius: 8px; color: #e8e0cc; text-decoration: none;
+          transition: all 0.25s ease; cursor: pointer; width: 100%;
         }
         .nav-main-btn:hover {
-          border-color: rgba(201,168,76,0.7);
-          background: rgba(201,168,76,0.1);
-          transform: translateX(4px);
+          border-color: rgba(201,168,76,0.7); background: rgba(201,168,76,0.1); transform: translateX(4px);
         }
-
         .nav-top-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 7px 16px;
-          background: transparent;
-          border: 1px solid rgba(201,168,76,0.2);
-          border-radius: 20px;
-          color: rgba(232,224,204,0.6);
-          text-decoration: none;
-          font-family: 'Rajdhani', sans-serif;
-          font-size: 0.82rem;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          transition: all 0.2s;
-          cursor: pointer;
-          white-space: nowrap;
+          display: flex; align-items: center; gap: 6px; padding: 7px 16px;
+          background: transparent; border: 1px solid rgba(201,168,76,0.2); border-radius: 20px;
+          color: rgba(232,224,204,0.6); text-decoration: none; font-family: 'Rajdhani', sans-serif;
+          font-size: 0.82rem; letter-spacing: 0.1em; text-transform: uppercase;
+          transition: all 0.2s; cursor: pointer; white-space: nowrap;
         }
-        .nav-top-btn:hover {
-          border-color: rgba(201,168,76,0.6);
-          color: #c9a84c;
-          background: rgba(201,168,76,0.08);
-        }
+        .nav-top-btn:hover { border-color: rgba(201,168,76,0.6); color: #c9a84c; background: rgba(201,168,76,0.08); }
       `}</style>
 
       {/* TOPBAR */}
@@ -155,6 +127,14 @@ export default function HomePage() {
             </div>
           </a>
 
+          <a href="/catalogue" className="nav-main-btn">
+            <span style={{ fontSize: '1.4rem' }}>📖</span>
+            <div>
+              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Catalogue</div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Toutes les cartes</div>
+            </div>
+          </a>
+
           <a href="/card-maker" className="nav-main-btn">
             <span style={{ fontSize: '1.4rem' }}>🎴</span>
             <div>
@@ -192,7 +172,7 @@ export default function HomePage() {
               Bienvenue, {profile.username}
             </div>
             <div style={{ fontSize: '0.78rem', color: 'rgba(232,224,204,0.4)', letterSpacing: '0.1em' }}>
-              Gingembre.
+              Le multivers t'attend
             </div>
           </div>
         </div>
