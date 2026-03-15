@@ -135,7 +135,7 @@ export default function CataloguePage() {
           <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f1e', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '12px', padding: '28px', maxWidth: '560px', width: '100%', position: 'relative' }}>
             <button onClick={() => setSelected(null)} style={{ position: 'absolute', top: '12px', right: '12px', background: 'transparent', border: 'none', color: 'rgba(201,168,76,0.5)', fontSize: '1.2rem', cursor: 'pointer' }}>x</button>
             <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
-              <div style={{ flexShrink: 0 }}>
+              <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{ width: '180px', height: '252px', borderRadius: '8px', overflow: 'hidden', background: '#141428', border: '2px solid ' + rc(selected.rarity), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {selected.image_url ? (
                     <img src={selected.image_url} alt={selected.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -143,6 +143,14 @@ export default function CataloguePage() {
                     <span style={{ fontSize: '4rem', opacity: 0.2 }}>🎴</span>
                   )}
                 </div>
+                {selected.image_url && (
+                  
+                    href={'/card-3d?url=' + encodeURIComponent(selected.image_url)}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '180px', padding: '10px', background: 'rgba(155,76,201,0.2)', border: '1px solid rgba(201,168,76,0.5)', borderRadius: '6px', color: '#c9a84c', fontSize: '0.82rem', textDecoration: 'none', boxSizing: 'border-box' }}
+                  >
+                    🌀 Voir en 3D
+                  </a>
+                )}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: '1.1rem', color: '#c9a84c', marginBottom: '6px' }}>{selected.name}</div>
