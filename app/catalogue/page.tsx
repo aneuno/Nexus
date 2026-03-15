@@ -144,13 +144,27 @@ export default function CataloguePage() {
                   )}
                 </div>
                 {selected.image_url && (
-                  
-                    href={'/card-3d?url=' + encodeURIComponent(selected.image_url)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '180px', padding: '10px', background: 'rgba(155,76,201,0.2)', border: '1px solid rgba(201,168,76,0.5)', borderRadius: '6px', color: '#c9a84c', fontSize: '0.82rem', textDecoration: 'none', boxSizing: 'border-box' }}
-                  >
-                    🌀 Voir en 3D
-                  </a>
-                )}
+  <a
+    href={'/card-3d?url=' + encodeURIComponent(selected.image_url)}
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '8px',
+      width: '180px',
+      padding: '10px',
+      background: 'rgba(155,76,201,0.2)',
+      border: '1px solid rgba(201,168,76,0.5)',
+      borderRadius: '6px',
+      color: '#c9a84c',
+      fontSize: '0.82rem',
+      textDecoration: 'none',
+      boxSizing: 'border-box'
+    }}
+  >
+    🌀 Voir en 3D
+  </a>
+)}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: '1.1rem', color: '#c9a84c', marginBottom: '6px' }}>{selected.name}</div>
