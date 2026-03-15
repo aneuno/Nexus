@@ -76,12 +76,8 @@ export default function CataloguePage() {
         }
         .filter-select:focus { border-color: rgba(201,168,76,0.7); }
         .card-thumb {
-          background: transparent;
-          border-radius: 8px;
-          padding: 0;
-          cursor: pointer;
-          transition: all 0.2s;
-          overflow: hidden;
+          background: transparent; border-radius: 8px; padding: 0;
+          cursor: pointer; transition: all 0.2s; overflow: hidden;
         }
         .card-thumb:hover {
           transform: translateY(-4px) scale(1.03);
@@ -89,14 +85,30 @@ export default function CataloguePage() {
           box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
         .modal-overlay {
-          position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+          position: fixed; inset: 0; background: rgba(0,0,0,0.85);
           display: flex; align-items: center; justify-content: center;
           z-index: 100; padding: 20px;
         }
         .modal-card {
           background: #0f0f1e; border: 1px solid rgba(201,168,76,0.4);
-          border-radius: 12px; padding: 24px; max-width: 440px; width: 100%;
+          border-radius: 12px; padding: 28px; max-width: 560px; width: 100%;
           position: relative;
+        }
+        .btn-3d {
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          width: 100%; padding: 12px;
+          background: linear-gradient(135deg, rgba(155,76,201,0.2), rgba(201,168,76,0.2));
+          border: 1px solid rgba(201,168,76,0.5);
+          border-radius: 6px; color: #c9a84c;
+          font-family: 'Cinzel', serif; font-size: 0.85rem;
+          letter-spacing: 0.1em; cursor: pointer;
+          transition: all 0.2s; text-decoration: none;
+          margin-top: 16px;
+        }
+        .btn-3d:hover {
+          background: linear-gradient(135deg, rgba(155,76,201,0.35), rgba(201,168,76,0.35));
+          box-shadow: 0 0 20px rgba(201,168,76,0.3);
+          transform: translateY(-1px);
         }
       `}</style>
 
@@ -155,10 +167,7 @@ export default function CataloguePage() {
             {filtered.map(card => (
               <div key={card.id} className="card-thumb" onClick={() => setSelected(card)}>
                 <div style={{
-                  width: '100%',
-                  aspectRatio: '0.72',
-                  borderRadius: '8px',
-                  overflow: 'hidden',
+                  width: '100%', aspectRatio: '0.72', borderRadius: '8px', overflow: 'hidden',
                   background: '#141428',
                   border: `1px solid ${rarityColor[card.rarity] || 'rgba(201,168,76,0.2)'}60`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -182,50 +191,70 @@ export default function CataloguePage() {
           <div className="modal-card" onClick={e => e.stopPropagation()}>
             <button onClick={() => setSelected(null)} style={{ position: 'absolute', top: '12px', right: '12px', background: 'transparent', border: 'none', color: 'rgba(201,168,76,0.5)', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
 
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-              <div style={{ width: '120px', flexShrink: 0 }}>
-                <div style={{ width: '120px', height: '168px', borderRadius: '6px', overflow: 'hidden', background: '#141428', border: `1px solid ${rarityColor[selected.rarity]}40`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+
+              {/* Image grande */}
+              <div style={{ flexShrink: 0 }}>
+                <div style={{
+                  width: '180px', height: '252px', borderRadius: '8px', overflow: 'hidden',
+                  background: '#141428',
+                  border: `2px solid ${rarityColor[selected.rarity] || 'rgba(201,168,76,0.3)'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: `0 0 20px ${rarityColor[selected.rarity] || 'rgba(201,168,76,0.2)'}40`
+                }}>
                   {selected.image_url ? (
                     <img src={selected.image_url} alt={selected.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ fontSize: '3rem', opacity: 0.3 }}>🎴</div>
+                    <div style={{ fontSize: '4rem', opacity: 0.2 }}>🎴</div>
                   )}
                 </div>
+
+                {/* Bouton Visu 3D */}
+                {selected.image_url && (
+                  
+                    href={`/card-3d?url=${encodeURIComponent(selected.image_url)}`}
+                    className="btn-3d"
+                  >
+                    🌀 Voir en 3D
+                  </a>
+                )}
               </div>
 
+              {/* Infos */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#c9a84c', marginBottom: '4px' }}>{selected.name}</div>
-                <div style={{ fontSize: '0.75rem', color: rarityColor[selected.rarity], marginBottom: '8px' }}>{rarityLabel[selected.rarity]}</div>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#c9a84c', marginBottom: '6px' }}>{selected.name}</div>
+                <div style={{ fontSize: '0.78rem', color: rarityColor[selected.rarity], marginBottom: '12px', letterSpacing: '0.05em' }}>{rarityLabel[selected.rarity]}</div>
 
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '0.68rem', padding: '2px 8px', borderRadius: '10px', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', color: '#c9a84c' }}>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '14px' }}>
+                  <span style={{ fontSize: '0.7rem', padding: '3px 10px', borderRadius: '10px', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', color: '#c9a84c' }}>
                     {typeLabel[selected.card_type] || selected.card_type}
                   </span>
-                  <span style={{ fontSize: '0.68rem', padding: '2px 8px', borderRadius: '10px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', color: 'rgba(201,168,76,0.7)' }}>
+                  <span style={{ fontSize: '0.7rem', padding: '3px 10px', borderRadius: '10px', background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)', color: 'rgba(201,168,76,0.7)' }}>
                     {selected.universe}
                   </span>
                 </div>
 
                 {(selected.card_type === 'monster' || selected.card_type === 'fusion' || selected.card_type === 'ritual') && (
-                  <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                    <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '4px 10px', fontSize: '0.78rem' }}>
-                      <span style={{ color: 'rgba(201,168,76,0.5)', letterSpacing: '0.1em' }}>ATK </span>
-                      <span style={{ color: '#c9a84c', fontWeight: 600 }}>{selected.atk}</span>
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+                    <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '6px 14px', fontSize: '0.82rem' }}>
+                      <span style={{ color: 'rgba(201,168,76,0.5)', letterSpacing: '0.1em', fontSize: '0.7rem' }}>ATK </span>
+                      <span style={{ color: '#c9a84c', fontWeight: 600, fontSize: '1rem' }}>{selected.atk}</span>
                     </div>
-                    <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '4px 10px', fontSize: '0.78rem' }}>
-                      <span style={{ color: 'rgba(201,168,76,0.5)', letterSpacing: '0.1em' }}>DEF </span>
-                      <span style={{ color: '#c9a84c', fontWeight: 600 }}>{selected.def}</span>
+                    <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '6px 14px', fontSize: '0.82rem' }}>
+                      <span style={{ color: 'rgba(201,168,76,0.5)', letterSpacing: '0.1em', fontSize: '0.7rem' }}>DEF </span>
+                      <span style={{ color: '#c9a84c', fontWeight: 600, fontSize: '1rem' }}>{selected.def}</span>
                     </div>
                   </div>
                 )}
 
                 {selected.description && (
-                  <div style={{ fontSize: '0.78rem', color: 'rgba(232,224,204,0.6)', lineHeight: '1.5', borderTop: '1px solid rgba(201,168,76,0.15)', paddingTop: '10px' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'rgba(232,224,204,0.6)', lineHeight: '1.6', borderTop: '1px solid rgba(201,168,76,0.15)', paddingTop: '12px', marginBottom: '10px' }}>
                     {selected.description}
                   </div>
                 )}
+
                 {selected.effect && (
-                  <div style={{ fontSize: '0.78rem', color: 'rgba(232,224,204,0.7)', lineHeight: '1.5', marginTop: '8px', padding: '8px', background: 'rgba(201,168,76,0.04)', borderRadius: '4px', border: '1px solid rgba(201,168,76,0.1)' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'rgba(232,224,204,0.75)', lineHeight: '1.6', padding: '10px 12px', background: 'rgba(201,168,76,0.04)', borderRadius: '4px', border: '1px solid rgba(201,168,76,0.12)' }}>
                     {selected.effect}
                   </div>
                 )}
