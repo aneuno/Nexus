@@ -58,4 +58,15 @@ export default function LoginPage() {
         <button
           onClick={handleLogin}
           disabled={loading}
-          style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '4px', fontSize: '1rem', fontWeight: 60
+          style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '4px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', opacity: loading ? 0.7 : 1 }}
+        >
+          {loading ? 'Connexion...' : 'Se connecter'}
+        </button>
+
+        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+          <a href="/register" style={{ fontSize: '0.82rem', color: 'rgba(232,224,204,0.5)' }}>Pas de compte ? S'inscrire</a>
+        </div>
+      </div>
+    </main>
+  )
+}
