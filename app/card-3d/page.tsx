@@ -253,7 +253,7 @@ export default function Card3D() {
       </div>
 
       {/* Bouton menu en bas à gauche */}
-      <a href="/" style={{ position: 'fixed', top: '20px', right: '20px', background: 'rgba(10,10,20,0.85)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '10px 16px', fontSize: '0.78rem', color: 'rgba(201,168,76,0.5)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif', letterSpacing: '0.1em', zIndex: 10, backdropFilter: 'blur(8px)' }}>
+      <a href="/" style={{ position: 'fixed', top: '20px', left: '20px', background: 'rgba(10,10,20,0.85)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '10px 16px', fontSize: '0.78rem', color: 'rgba(201,168,76,0.5)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif', letterSpacing: '0.1em', zIndex: 10, backdropFilter: 'blur(8px)' }}>
         ← Menu
       </a>
     </main>
