@@ -91,12 +91,18 @@ export default function ShopPage() {
     await supabase.from('profiles').update(updates).eq('id', session.user.id)
 
     if (item.item_type !== 'booster') {
-      await supabase.from('player_inventory').insert({
+      const { error: invError } = await supabase.from('player_inventory').insert({
         player_id: session.user.id,
         item_type: item.item_type,
         item_id: item.item_id,
         obtained_from: 'shop'
       })
+      if (invError) {
+        setMessage({ type: 'error', text: 'Erreur inventaire : ' + invError.message })
+        setTimeout(() => setMessage(null), 6000)
+        setConfirm(null)
+        return
+      }
       setOwned(prev => [...prev, item.item_id])
     }
 
@@ -138,7 +144,6 @@ export default function ShopPage() {
           </div>
         )}
 
-        {/* Image */}
         <div style={{
           width: '100%',
           height: item.item_type === 'avatar' ? '120px' : item.item_type === 'banner' ? '80px' : '120px',
@@ -153,22 +158,12 @@ export default function ShopPage() {
             item.item_type === 'avatar' ? (
               <div
                 onClick={() => setPreview(item)}
-                style={{
-                  width: '90px', height: '90px',
-                  borderRadius: '50%', overflow: 'hidden',
-                  border: `2px solid ${rc}`,
-                  cursor: 'zoom-in', flexShrink: 0
-                }}
+                style={{ width: '90px', height: '90px', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${rc}`, cursor: 'zoom-in', flexShrink: 0 }}
               >
                 <img src={item.image_url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
             ) : (
-              <img
-                src={item.image_url}
-                alt={item.name}
-                onClick={() => setPreview(item)}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in', borderRadius: '6px' }}
-              />
+              <img src={item.image_url} alt={item.name} onClick={() => setPreview(item)} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in', borderRadius: '6px' }} />
             )
           ) : (
             <span style={{ fontSize: '2rem', opacity: 0.3 }}>
@@ -177,13 +172,11 @@ export default function ShopPage() {
           )}
         </div>
 
-        {/* Infos */}
         <div>
           <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: rc, marginBottom: '2px' }}>{item.name}</div>
           {item.description && <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.5)', lineHeight: '1.4' }}>{item.description}</div>}
         </div>
 
-        {/* Prix */}
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {item.price_coins > 0 && (
             <span style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '10px', padding: '3px 8px', fontSize: '0.75rem', color: '#c9a84c' }}>
@@ -197,18 +190,10 @@ export default function ShopPage() {
           )}
         </div>
 
-        {/* Bouton achat */}
         {!isOwned || isVoid ? (
           <button
             onClick={() => setConfirm(item)}
-            style={{
-              width: '100%', padding: '9px',
-              background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)',
-              color: '#0a0a14', border: 'none', borderRadius: '5px',
-              fontFamily: 'Cinzel, serif', fontSize: '0.78rem',
-              letterSpacing: '0.1em', cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
+            style={{ width: '100%', padding: '9px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '5px', fontFamily: 'Cinzel, serif', fontSize: '0.78rem', letterSpacing: '0.1em', cursor: 'pointer' }}
           >
             Acheter
           </button>
@@ -259,7 +244,6 @@ export default function ShopPage() {
         .tab-btn:hover { color: #e8e0cc; }
       `}</style>
 
-      {/* Topbar */}
       <div style={{ background: '#0a0a14', borderBottom: '1px solid rgba(201,168,76,0.2)', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
         <a href="/" style={{ fontSize: '0.8rem', color: 'rgba(201,168,76,0.5)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif' }}>← Menu</a>
         <div style={{ width: '1px', height: '16px', background: 'rgba(201,168,76,0.2)' }} />
@@ -271,7 +255,6 @@ export default function ShopPage() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div style={{ background: 'rgba(10,10,20,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', padding: '0 20px', display: 'flex', overflowX: 'auto', flexShrink: 0 }}>
         {tabs.map(tab => (
           <button key={tab.id} className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`} onClick={() => setActiveTab(tab.id)}>
@@ -280,7 +263,6 @@ export default function ShopPage() {
         ))}
       </div>
 
-      {/* Description Void */}
       {activeTab === 'void' && (
         <div style={{ padding: '16px 20px', background: 'rgba(155,76,201,0.06)', borderBottom: '1px solid rgba(155,76,201,0.15)' }}>
           <div style={{ fontFamily: 'Cinzel, serif', color: '#9b4cc9', fontSize: '0.88rem', marginBottom: '4px' }}>Le Void</div>
@@ -290,7 +272,6 @@ export default function ShopPage() {
         </div>
       )}
 
-      {/* Grille items */}
       <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
         {currentItems.length === 0 ? (
           <EmptyState
@@ -310,7 +291,6 @@ export default function ShopPage() {
         )}
       </div>
 
-      {/* Modal confirmation achat */}
       {confirm && (
         <div onClick={() => setConfirm(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f1e', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '12px', padding: '28px', maxWidth: '380px', width: '100%', textAlign: 'center' }}>
@@ -320,14 +300,10 @@ export default function ShopPage() {
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '20px' }}>
               {confirm.price_coins > 0 && (
-                <span style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '10px', padding: '4px 12px', fontSize: '0.82rem', color: '#c9a84c' }}>
-                  ✦ {confirm.price_coins}
-                </span>
+                <span style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '10px', padding: '4px 12px', fontSize: '0.82rem', color: '#c9a84c' }}>✦ {confirm.price_coins}</span>
               )}
               {confirm.price_crystals > 0 && (
-                <span style={{ background: 'rgba(76,201,168,0.1)', border: '1px solid rgba(76,201,168,0.3)', borderRadius: '10px', padding: '4px 12px', fontSize: '0.82rem', color: '#4cc9a8' }}>
-                  ◈ {confirm.price_crystals}
-                </span>
+                <span style={{ background: 'rgba(76,201,168,0.1)', border: '1px solid rgba(76,201,168,0.3)', borderRadius: '10px', padding: '4px 12px', fontSize: '0.82rem', color: '#4cc9a8' }}>◈ {confirm.price_crystals}</span>
               )}
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -342,7 +318,6 @@ export default function ShopPage() {
         </div>
       )}
 
-      {/* Modal preview image */}
       {preview && (
         <div onClick={() => setPreview(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '20px', cursor: 'zoom-out' }}>
           <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
@@ -362,7 +337,6 @@ export default function ShopPage() {
         </div>
       )}
 
-      {/* Message succès/erreur */}
       {message && (
         <div style={{
           position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
