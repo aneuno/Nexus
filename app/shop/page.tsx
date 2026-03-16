@@ -10,8 +10,7 @@ const supabase = createClient(
 
 export default function ShopPage() {
   const [profile, setProfile] = useState<any>(null)
-  const [activeTab, setActiveTab] = useState('void')
-  const [voidItems, setVoidItems] = useState<any[]>([])
+  const [activeTab, setActiveTab] = useState('icons')
   const [icons, setIcons] = useState<any[]>([])
   const [banners, setBanners] = useState<any[]>([])
   const [titles, setTitles] = useState<any[]>([])
@@ -35,7 +34,6 @@ export default function ShopPage() {
 
       const { data: items } = await supabase.from('shop_items').select('*').eq('is_active', true)
       if (items) {
-        setVoidItems(items.filter((i: any) => i.item_type === 'booster'))
         setIcons(items.filter((i: any) => i.item_type === 'avatar'))
         setBanners(items.filter((i: any) => i.item_type === 'banner'))
         setTitles(items.filter((i: any) => i.item_type === 'title'))
@@ -48,7 +46,6 @@ export default function ShopPage() {
   }, [])
 
   const tabs = [
-    { id: 'void', label: '🌀 Void' },
     { id: 'icons', label: '👤 Icônes' },
     { id: 'banners', label: '🖼️ Bannières' },
     { id: 'titles', label: '📜 Titres' },
@@ -90,21 +87,19 @@ export default function ShopPage() {
     if (useCrystals) updates.crystals = profile.crystals - item.price_crystals
     await supabase.from('profiles').update(updates).eq('id', session.user.id)
 
-    if (item.item_type !== 'booster') {
-      const { error: invError } = await supabase.from('player_inventory').insert({
-        player_id: session.user.id,
-        item_type: item.item_type,
-        item_id: item.item_id,
-        obtained_from: 'shop'
-      })
-      if (invError) {
-        setMessage({ type: 'error', text: 'Erreur inventaire : ' + invError.message })
-        setTimeout(() => setMessage(null), 6000)
-        setConfirm(null)
-        return
-      }
-      setOwned(prev => [...prev, item.item_id])
+    const { error: invError } = await supabase.from('player_inventory').insert({
+      player_id: session.user.id,
+      item_type: item.item_type,
+      item_id: item.item_id,
+      obtained_from: 'shop'
+    })
+    if (invError) {
+      setMessage({ type: 'error', text: 'Erreur inventaire : ' + invError.message })
+      setTimeout(() => setMessage(null), 6000)
+      setConfirm(null)
+      return
     }
+    setOwned(prev => [...prev, item.item_id])
 
     await supabase.from('transactions').insert({
       player_id: session.user.id,
@@ -122,23 +117,22 @@ export default function ShopPage() {
 
   const ItemCard = ({ item }: { item: any }) => {
     const isOwned = owned.includes(item.item_id)
-    const isVoid = item.item_type === 'booster'
     const rc = rarityColor(item.rarity || 'common')
 
     return (
       <div style={{
         background: '#0f0f1e',
-        border: `1px solid ${isOwned && !isVoid ? 'rgba(201,168,76,0.15)' : rc + '40'}`,
+        border: `1px solid ${isOwned ? 'rgba(201,168,76,0.15)' : rc + '40'}`,
         borderRadius: '10px',
         padding: '16px',
         display: 'flex',
         flexDirection: 'column',
         gap: '10px',
-        opacity: isOwned && !isVoid ? 0.6 : 1,
+        opacity: isOwned ? 0.6 : 1,
         position: 'relative',
         transition: 'all 0.2s'
       }}>
-        {isOwned && !isVoid && (
+        {isOwned && (
           <div style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '10px', padding: '2px 8px', fontSize: '0.62rem', color: '#c9a84c', letterSpacing: '0.1em' }}>
             POSSÉDÉ
           </div>
@@ -167,7 +161,7 @@ export default function ShopPage() {
             )
           ) : (
             <span style={{ fontSize: '2rem', opacity: 0.3 }}>
-              {item.item_type === 'booster' ? '🌀' : item.item_type === 'avatar' ? '👤' : item.item_type === 'banner' ? '🖼️' : item.item_type === 'title' ? '📜' : '🏅'}
+              {item.item_type === 'avatar' ? '👤' : item.item_type === 'banner' ? '🖼️' : item.item_type === 'title' ? '📜' : '🏅'}
             </span>
           )}
         </div>
@@ -190,7 +184,7 @@ export default function ShopPage() {
           )}
         </div>
 
-        {!isOwned || isVoid ? (
+        {!isOwned ? (
           <button
             onClick={() => setConfirm(item)}
             style={{ width: '100%', padding: '9px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '5px', fontFamily: 'Cinzel, serif', fontSize: '0.78rem', letterSpacing: '0.1em', cursor: 'pointer' }}
@@ -221,7 +215,6 @@ export default function ShopPage() {
   )
 
   const currentItems = {
-    void: voidItems,
     icons: icons,
     banners: banners,
     titles: titles,
@@ -263,19 +256,10 @@ export default function ShopPage() {
         ))}
       </div>
 
-      {activeTab === 'void' && (
-        <div style={{ padding: '16px 20px', background: 'rgba(155,76,201,0.06)', borderBottom: '1px solid rgba(155,76,201,0.15)' }}>
-          <div style={{ fontFamily: 'Cinzel, serif', color: '#9b4cc9', fontSize: '0.88rem', marginBottom: '4px' }}>Le Void</div>
-          <div style={{ fontSize: '0.78rem', color: 'rgba(232,224,204,0.5)', lineHeight: '1.5' }}>
-            Ouvrez des portails dimensionnels pour invoquer des cartes du multivers. Les boosters Void nécessitent des Cristaux.
-          </div>
-        </div>
-      )}
-
       <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
         {currentItems.length === 0 ? (
           <EmptyState
-            icon={activeTab === 'void' ? '🌀' : activeTab === 'icons' ? '👤' : activeTab === 'banners' ? '🖼️' : activeTab === 'titles' ? '📜' : '🏅'}
+            icon={activeTab === 'icons' ? '👤' : activeTab === 'banners' ? '🖼️' : activeTab === 'titles' ? '📜' : '🏅'}
             text="Aucun article disponible pour le moment"
           />
         ) : (
