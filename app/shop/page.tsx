@@ -20,6 +20,7 @@ export default function ShopPage() {
   const [loading, setLoading] = useState(true)
   const [confirm, setConfirm] = useState<any>(null)
   const [message, setMessage] = useState<any>(null)
+  const [preview, setPreview] = useState<any>(null)
 
   useEffect(() => {
     async function load() {
@@ -84,13 +85,11 @@ export default function ShopPage() {
       return
     }
 
-    // Débiter la monnaie
     const updates: any = {}
     if (useCoins) updates.nexus_coins = profile.nexus_coins - item.price_coins
     if (useCrystals) updates.crystals = profile.crystals - item.price_crystals
     await supabase.from('profiles').update(updates).eq('id', session.user.id)
 
-    // Ajouter à l'inventaire
     if (item.item_type !== 'booster') {
       await supabase.from('player_inventory').insert({
         player_id: session.user.id,
@@ -101,7 +100,6 @@ export default function ShopPage() {
       setOwned(prev => [...prev, item.item_id])
     }
 
-    // Enregistrer la transaction
     await supabase.from('transactions').insert({
       player_id: session.user.id,
       item_id: item.id,
@@ -124,7 +122,7 @@ export default function ShopPage() {
     return (
       <div style={{
         background: '#0f0f1e',
-        border: `1px solid ${isOwned ? 'rgba(201,168,76,0.15)' : rc + '40'}`,
+        border: `1px solid ${isOwned && !isVoid ? 'rgba(201,168,76,0.15)' : rc + '40'}`,
         borderRadius: '10px',
         padding: '16px',
         display: 'flex',
@@ -143,21 +141,35 @@ export default function ShopPage() {
         {/* Image */}
         <div style={{
           width: '100%',
-          height: item.item_type === 'banner' ? '80px' : item.item_type === 'avatar' ? '100px' : '120px',
-          borderRadius: '6px',
-          overflow: 'hidden',
-          background: '#141428',
+          height: item.item_type === 'avatar' ? '120px' : item.item_type === 'banner' ? '80px' : '120px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          background: '#141428',
+          borderRadius: '6px',
           border: `1px solid ${rc}30`
         }}>
           {item.image_url ? (
-            <img src={item.image_url} alt={item.name} style={{
-              width: '100%', height: '100%',
-              objectFit: item.item_type === 'avatar' ? 'cover' : 'cover',
-              borderRadius: item.item_type === 'avatar' ? '50%' : '0'
-            }} />
+            item.item_type === 'avatar' ? (
+              <div
+                onClick={() => setPreview(item)}
+                style={{
+                  width: '90px', height: '90px',
+                  borderRadius: '50%', overflow: 'hidden',
+                  border: `2px solid ${rc}`,
+                  cursor: 'zoom-in', flexShrink: 0
+                }}
+              >
+                <img src={item.image_url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            ) : (
+              <img
+                src={item.image_url}
+                alt={item.name}
+                onClick={() => setPreview(item)}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in', borderRadius: '6px' }}
+              />
+            )
           ) : (
             <span style={{ fontSize: '2rem', opacity: 0.3 }}>
               {item.item_type === 'booster' ? '🌀' : item.item_type === 'avatar' ? '👤' : item.item_type === 'banner' ? '🖼️' : item.item_type === 'title' ? '📜' : '🏅'}
@@ -278,7 +290,7 @@ export default function ShopPage() {
         </div>
       )}
 
-      {/* Grille d'items */}
+      {/* Grille items */}
       <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
         {currentItems.length === 0 ? (
           <EmptyState
@@ -326,6 +338,26 @@ export default function ShopPage() {
                 Confirmer
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal preview image */}
+      {preview && (
+        <div onClick={() => setPreview(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '20px', cursor: 'zoom-out' }}>
+          <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+            <div style={{
+              width: preview.item_type === 'avatar' ? '200px' : '500px',
+              height: preview.item_type === 'avatar' ? '200px' : preview.item_type === 'banner' ? '160px' : '300px',
+              borderRadius: preview.item_type === 'avatar' ? '50%' : '12px',
+              overflow: 'hidden',
+              border: `2px solid ${rarityColor(preview.rarity || 'common')}`,
+              boxShadow: `0 0 40px ${rarityColor(preview.rarity || 'common')}40`
+            }}>
+              <img src={preview.image_url} alt={preview.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div style={{ fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '1rem' }}>{preview.name}</div>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(232,224,204,0.4)' }}>Cliquez n'importe où pour fermer</div>
           </div>
         </div>
       )}
