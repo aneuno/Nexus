@@ -1,194 +1,261 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { useEffect, useRef, useState } from 'react'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+export default function Card3D() {
+  const mountRef = useRef<HTMLDivElement>(null)
+  const sceneRef = useRef<any>({})
 
-export default function HomePage() {
-  const [profile, setProfile] = useState<any>(null)
+  const [lightIntensity, setLightIntensity] = useState(2)
+  const [lightColor1, setLightColor1] = useState('#c9a84c')
+  const [lightColor2, setLightColor2] = useState('#9b4cc9')
+  const [rainbow, setRainbow] = useState(false)
+
+  function hexToInt(hex: string) {
+    return parseInt(hex.replace('#', ''), 16)
+  }
 
   useEffect(() => {
-    async function init() {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        window.location.href = '/login'
-        return
-      }
-      const { data } = await supabase
-        .from('profiles')
-        .select('*, avatars(*)')
-        .eq('id', session.user.id)
-        .single()
-      setProfile(data)
+    const mount = mountRef.current
+    if (!mount) return
+    mount.innerHTML = ''
+
+    const script1 = document.createElement('script')
+    script1.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
+    script1.onload = () => initScene()
+    document.head.appendChild(script1)
+
+    function initScene() {
+      const THREE = (window as any).THREE
+      if (!mount) return
+
+      const width = mount.clientWidth
+      const height = mount.clientHeight
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+      renderer.setSize(width, height)
+      renderer.setPixelRatio(window.devicePixelRatio)
+      mount.appendChild(renderer.domElement)
+
+      const scene = new THREE.Scene()
+      const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
+      camera.position.z = 6.5
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
+      scene.add(ambientLight)
+
+      const pointLight1 = new THREE.PointLight(hexToInt(lightColor1), lightIntensity, 10)
+      pointLight1.position.set(3, 3, 3)
+      scene.add(pointLight1)
+
+      const pointLight2 = new THREE.PointLight(hexToInt(lightColor2), lightIntensity * 0.75, 10)
+      pointLight2.position.set(-3, -2, 2)
+      scene.add(pointLight2)
+
+      sceneRef.current.pointLight1 = pointLight1
+      sceneRef.current.pointLight2 = pointLight2
+      sceneRef.current.scene = scene
+      sceneRef.current.renderer = renderer
+
+      const loader = new THREE.TextureLoader()
+      loader.crossOrigin = 'anonymous'
+      loader.load('https://res.cloudinary.com/daowtjque/image/upload/v1773541131/Strelitzia_V2_upflzl.png', (texture: any) => {
+        const geometry = new THREE.PlaneGeometry(2, 2.85)
+
+        const material = new THREE.MeshStandardMaterial({
+          map: texture,
+          side: THREE.FrontSide,
+          metalness: 0.3,
+          roughness: 0.4,
+        })
+
+        const backMaterial = new THREE.MeshStandardMaterial({
+          color: 0x0a0a14,
+          side: THREE.BackSide,
+          metalness: 0.5,
+          roughness: 0.3,
+        })
+
+        const cardFront = new THREE.Mesh(geometry, material)
+        const cardBack = new THREE.Mesh(geometry, backMaterial)
+        scene.add(cardFront)
+        scene.add(cardBack)
+
+        const edgeGeometry = new THREE.PlaneGeometry(2.05, 2.9)
+        const edgeMaterial = new THREE.MeshStandardMaterial({
+          color: hexToInt(lightColor1),
+          metalness: 0.9,
+          roughness: 0.1,
+          side: THREE.DoubleSide,
+        })
+        const edge = new THREE.Mesh(edgeGeometry, edgeMaterial)
+        edge.position.z = -0.002
+        scene.add(edge)
+
+        const particleGeometry = new THREE.BufferGeometry()
+        const particleCount = 100
+        const positions = new Float32Array(particleCount * 3)
+        for (let i = 0; i < particleCount; i++) {
+          positions[i * 3] = (Math.random() - 0.5) * 6
+          positions[i * 3 + 1] = (Math.random() - 0.5) * 8
+          positions[i * 3 + 2] = (Math.random() - 0.5) * 3
+        }
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+        const particleMaterial = new THREE.PointsMaterial({
+          color: hexToInt(lightColor1),
+          size: 0.035,
+          transparent: true,
+          opacity: 0.7
+        })
+        const particles = new THREE.Points(particleGeometry, particleMaterial)
+        scene.add(particles)
+
+        sceneRef.current.cardFront = cardFront
+        sceneRef.current.cardBack = cardBack
+        sceneRef.current.edge = edge
+        sceneRef.current.particles = particles
+        sceneRef.current.edgeMaterial = edgeMaterial
+        sceneRef.current.particleMaterial = particleMaterial
+
+        let mouseX = 0
+        let mouseY = 0
+        let targetX = 0
+        let targetY = 0
+        let hue = 0
+
+        window.addEventListener('mousemove', (e: MouseEvent) => {
+          mouseX = ((e.clientX / window.innerWidth) - 0.5) * 2
+          mouseY = -((e.clientY / window.innerHeight) - 0.5) * 2
+        })
+
+        function animate() {
+          requestAnimationFrame(animate)
+          const time = Date.now() * 0.001
+
+          targetX += (mouseX * 0.8 - targetX) * 0.05
+          targetY += (mouseY * 0.5 - targetY) * 0.05
+          cardFront.rotation.y = targetX
+          cardBack.rotation.y = targetX
+          edge.rotation.y = targetX
+          cardFront.rotation.x = -targetY
+          cardBack.rotation.x = -targetY
+          edge.rotation.x = -targetY
+
+          if (sceneRef.current.rainbow) {
+            hue = (hue + 1) % 360
+            const color = new THREE.Color(`hsl(${hue}, 100%, 60%)`)
+            const color2 = new THREE.Color(`hsl(${(hue + 180) % 360}, 100%, 60%)`)
+            pointLight1.color.set(color)
+            pointLight2.color.set(color2)
+            edgeMaterial.color.set(color)
+            particleMaterial.color.set(color)
+          } else {
+            pointLight1.color.set(new THREE.Color(hexToInt(sceneRef.current.lc1 || '#c9a84c')))
+            pointLight2.color.set(new THREE.Color(hexToInt(sceneRef.current.lc2 || '#9b4cc9')))
+            edgeMaterial.color.set(new THREE.Color(hexToInt(sceneRef.current.lc1 || '#c9a84c')))
+            particleMaterial.color.set(new THREE.Color(hexToInt(sceneRef.current.lc1 || '#c9a84c')))
+          }
+
+          pointLight1.position.x = Math.sin(time) * 3
+          pointLight1.position.y = Math.cos(time * 0.7) * 3
+          pointLight2.position.x = Math.cos(time * 0.8) * 3
+          pointLight2.position.y = Math.sin(time * 1.2) * 2
+
+          particles.rotation.y += 0.001
+          particles.rotation.x += 0.0005
+
+          renderer.render(scene, camera)
+        }
+
+        animate()
+      })
+
+      window.addEventListener('resize', () => {
+        const w = mount.clientWidth
+        const h = mount.clientHeight
+        camera.aspect = w / h
+        camera.updateProjectionMatrix()
+        renderer.setSize(w, h)
+      })
     }
-    init()
+
+    return () => {
+      if (mountRef.current) mountRef.current.innerHTML = ''
+    }
   }, [])
 
-  if (!profile) return (
-    <main style={{ minHeight: '100vh', background: '#0a0a14', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c9a84c', fontFamily: 'sans-serif' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ width: '60px', height: '60px', border: '2px solid #c9a84c', borderRadius: '50%', margin: '0 auto 1rem', animation: 'spin 1s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-        Chargement...
-      </div>
-    </main>
-  )
+  useEffect(() => { sceneRef.current.rainbow = rainbow }, [rainbow])
+  useEffect(() => { sceneRef.current.lc1 = lightColor1 }, [lightColor1])
+  useEffect(() => { sceneRef.current.lc2 = lightColor2 }, [lightColor2])
+  useEffect(() => {
+    if (sceneRef.current.pointLight1) sceneRef.current.pointLight1.intensity = lightIntensity
+    if (sceneRef.current.pointLight2) sceneRef.current.pointLight2.intensity = lightIntensity * 0.75
+  }, [lightIntensity])
 
   return (
-    <main style={{ minHeight: '100vh', background: '#0a0a14', color: '#e8e0cc', fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <main style={{ minHeight: '100vh', background: '#0a0a14', overflow: 'hidden', position: 'relative' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Rajdhani:wght@400;500;600&display=swap');
-        @keyframes spin1 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes spin2 { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
-        @keyframes spin3 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes pulse { 0%,100% { opacity: 0.5; transform: translate(-50%,-50%) scale(1); } 50% { opacity: 1; transform: translate(-50%,-50%) scale(1.15); } }
-        @keyframes float { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
-        .nav-main-btn {
-          display: flex; align-items: center; gap: 14px; padding: 16px 20px;
-          background: rgba(201,168,76,0.04); border: 1px solid rgba(201,168,76,0.2);
-          border-radius: 8px; color: #e8e0cc; text-decoration: none;
-          transition: all 0.25s ease; cursor: pointer; width: 100%;
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Rajdhani:wght@400;500;600&display=swap');
+        .slider { width: 100%; accent-color: #c9a84c; cursor: pointer; }
+        .panel-label { font-size: 0.68rem; color: rgba(201,168,76,0.5); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; font-family: 'Rajdhani', sans-serif; }
+        .color-input { width: 44px; height: 32px; border: 1px solid rgba(201,168,76,0.3); border-radius: 4px; cursor: pointer; background: none; padding: 2px; }
+        .rainbow-btn {
+          width: 100%; padding: 8px; border-radius: 4px; cursor: pointer;
+          font-family: 'Rajdhani', sans-serif; font-size: 0.78rem; letter-spacing: 0.08em;
+          transition: all 0.2s; border: 1px solid rgba(201,168,76,0.2);
+          background: transparent; color: rgba(232,224,204,0.5);
         }
-        .nav-main-btn:hover {
-          border-color: rgba(201,168,76,0.7); background: rgba(201,168,76,0.1); transform: translateX(4px);
+        .rainbow-btn.active {
+          background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff);
+          color: white; border-color: transparent; font-weight: 600;
         }
-        .nav-top-btn {
-          display: flex; align-items: center; gap: 6px; padding: 7px 16px;
-          background: transparent; border: 1px solid rgba(201,168,76,0.2); border-radius: 20px;
-          color: rgba(232,224,204,0.6); text-decoration: none; font-family: 'Rajdhani', sans-serif;
-          font-size: 0.82rem; letter-spacing: 0.1em; text-transform: uppercase;
-          transition: all 0.2s; cursor: pointer; white-space: nowrap;
-        }
-        .nav-top-btn:hover { border-color: rgba(201,168,76,0.6); color: #c9a84c; background: rgba(201,168,76,0.08); }
+        .rainbow-btn:hover:not(.active) { border-color: rgba(201,168,76,0.5); color: #e8e0cc; }
       `}</style>
 
-      {/* TOPBAR */}
-      <div style={{ background: '#0a0a14', borderBottom: '1px solid rgba(201,168,76,0.2)', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '12px', zIndex: 10, flexShrink: 0 }}>
-        <span style={{ fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '1rem', letterSpacing: '0.15em', flexShrink: 0 }}>NEXUS CHRONICLES</span>
-        <div style={{ width: '1px', height: '20px', background: 'rgba(201,168,76,0.2)' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-          <div style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1.5px solid #c9a84c', background: '#1a1a35', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>
-            {profile.avatars?.image_url ? (
-              <img src={profile.avatars.image_url} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              profile.avatar || '🐉'
-            )}
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.88rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile.username}</div>
-            <div style={{ fontSize: '0.65rem', color: '#c9a84c', letterSpacing: '0.08em' }}>★ {profile.rank}</div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <span style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '20px', padding: '3px 10px', fontSize: '0.78rem', color: '#c9a84c', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>✦ {profile.nexus_coins}</span>
-          <span style={{ background: '#141428', border: '1px solid rgba(76,201,168,0.3)', borderRadius: '20px', padding: '3px 10px', fontSize: '0.78rem', color: '#4cc9a8', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>◈ {profile.crystals}</span>
-        </div>
+      {/* Zone 3D plein écran */}
+      <div ref={mountRef} style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', cursor: 'default' }} />
+
+      {/* Titre */}
+      <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '0.8rem', letterSpacing: '0.3em', textTransform: 'uppercase', opacity: 0.5, zIndex: 10, pointerEvents: 'none' }}>
+        Nexus Chronicles — Visualiseur 3D
       </div>
 
-      {/* BARRE DU HAUT */}
-      <div style={{ background: 'rgba(10,10,20,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', padding: '8px 20px', display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
-        <a href="/leaderboard" className="nav-top-btn">🏆 Classement</a>
-        <a href="/friends" className="nav-top-btn">👥 Amis</a>
-        <a href="/profile" className="nav-top-btn">👤 Profil</a>
-        <div style={{ flex: 1 }} />
-        <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} className="nav-top-btn" style={{ color: 'rgba(201,76,76,0.7)', borderColor: 'rgba(201,76,76,0.2)' }}>
-          ⬡ Déconnexion
-        </button>
-      </div>
+      {/* Panneau gauche */}
+      <div style={{ position: 'fixed', left: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(10,10,20,0.85)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '16px', width: '200px', zIndex: 10, backdropFilter: 'blur(8px)' }}>
 
-      {/* CONTENU PRINCIPAL */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <div className="panel-label">Éclairage</div>
 
-        {/* SIDEBAR GAUCHE */}
-        <div style={{ width: '220px', flexShrink: 0, borderRight: '1px solid rgba(201,168,76,0.15)', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(10,10,20,0.8)', overflowY: 'auto' }}>
-          <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'rgba(201,168,76,0.5)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '6px', paddingLeft: '4px' }}>Navigation</div>
-
-          <a href="/play" className="nav-main-btn">
-            <span style={{ fontSize: '1.4rem' }}>⚔️</span>
-            <div>
-              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Jouer</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Lancer une partie</div>
-            </div>
-          </a>
-
-          <a href="/inventory" className="nav-main-btn">
-            <span style={{ fontSize: '1.4rem' }}>🗃️</span>
-            <div>
-              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Inventaire</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Cartes & cosmétiques</div>
-            </div>
-          </a>
-
-          <a href="/shop" className="nav-main-btn">
-            <span style={{ fontSize: '1.4rem' }}>💠</span>
-            <div>
-              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Boutique</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Cosmétiques</div>
-            </div>
-          </a>
-
-          <a href="/gacha" className="nav-main-btn">
-            <span style={{ fontSize: '1.4rem' }}>🌀</span>
-            <div>
-              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Void</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Invocation de cartes</div>
-            </div>
-          </a>
-
-          <a href="/market" className="nav-main-btn">
-            <span style={{ fontSize: '1.4rem' }}>🏪</span>
-            <div>
-              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Market</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Acheter & vendre</div>
-            </div>
-          </a>
-
-          <a href="/catalogue" className="nav-main-btn">
-            <span style={{ fontSize: '1.4rem' }}>📖</span>
-            <div>
-              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Catalogue</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Toutes les cartes</div>
-            </div>
-          </a>
-
-          <a href="/card-maker" className="nav-main-btn">
-            <span style={{ fontSize: '1.4rem' }}>🎴</span>
-            <div>
-              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Card Maker</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Créer une carte</div>
-            </div>
-          </a>
-        </div>
-
-        {/* CENTRE — Portail animé */}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, rgba(201,168,76,0.06) 0%, rgba(155,76,201,0.04) 40%, transparent 70%)', pointerEvents: 'none' }} />
-
-          <div style={{ position: 'relative', width: '280px', height: '280px', animation: 'float 4s ease-in-out infinite' }}>
-            <div style={{ position: 'absolute', inset: 0, border: '2px solid rgba(201,168,76,0.7)', borderRadius: '50%', animation: 'spin1 10s linear infinite', boxShadow: '0 0 20px rgba(201,168,76,0.3), inset 0 0 20px rgba(201,168,76,0.1)' }} />
-            <div style={{ position: 'absolute', inset: '14px', border: '1.5px solid rgba(155,76,201,0.5)', borderRadius: '50%', animation: 'spin2 7s linear infinite', boxShadow: '0 0 15px rgba(155,76,201,0.2)' }} />
-            <div style={{ position: 'absolute', inset: '28px', border: '1px solid rgba(76,201,168,0.4)', borderRadius: '50%', animation: 'spin3 5s linear infinite' }} />
-            <div style={{ position: 'absolute', inset: '42px', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '50%', animation: 'spin2 12s linear infinite' }} />
-            <div style={{ position: 'absolute', top: '50%', left: '50%', width: '90px', height: '90px', transform: 'translate(-50%, -50%)', background: 'radial-gradient(circle, rgba(201,168,76,0.6) 0%, rgba(155,76,201,0.3) 50%, transparent 70%)', borderRadius: '50%', animation: 'pulse 3s ease-in-out infinite', boxShadow: '0 0 40px rgba(201,168,76,0.4)' }} />
-            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', zIndex: 2 }}>
-              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: '#c9a84c', letterSpacing: '0.2em', textTransform: 'uppercase', textShadow: '0 0 10px rgba(201,168,76,0.8)' }}>Nexus</div>
-            </div>
-          </div>
-
-          <div style={{ position: 'absolute', bottom: '40px', textAlign: 'center', left: 0, right: 0 }}>
-            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#c9a84c', marginBottom: '6px' }}>
-              Bienvenue, {profile.username}
-            </div>
-            <div style={{ fontSize: '0.78rem', color: 'rgba(232,224,204,0.4)', letterSpacing: '0.1em' }}>
-              Le multivers t'attend
-            </div>
+        <div style={{ marginBottom: '12px' }}>
+          <div style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', marginBottom: '6px', fontFamily: 'Rajdhani, sans-serif' }}>Lumière 1</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input type="color" className="color-input" value={lightColor1} onChange={e => { setLightColor1(e.target.value); setRainbow(false) }} />
+            <span style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', fontFamily: 'Rajdhani, sans-serif' }}>{lightColor1}</span>
           </div>
         </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', marginBottom: '6px', fontFamily: 'Rajdhani, sans-serif' }}>Lumière 2</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input type="color" className="color-input" value={lightColor2} onChange={e => { setLightColor2(e.target.value); setRainbow(false) }} />
+            <span style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', fontFamily: 'Rajdhani, sans-serif' }}>{lightColor2}</span>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <button className={`rainbow-btn ${rainbow ? 'active' : ''}`} onClick={() => setRainbow(prev => !prev)}>
+            🌈 Rainbow
+          </button>
+        </div>
+
+        <div className="panel-label">Intensité</div>
+        <input type="range" className="slider" min="0.5" max="5" step="0.1" value={lightIntensity} onChange={e => setLightIntensity(parseFloat(e.target.value))} style={{ marginBottom: '6px' }} />
+        <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.4)', marginBottom: '4px', textAlign: 'center', fontFamily: 'Rajdhani, sans-serif' }}>{lightIntensity.toFixed(1)}</div>
       </div>
+
+      {/* Bouton menu en bas à gauche */}
+      <a href="/" style={{ position: 'fixed', top: '20px', left: '20px', background: 'rgba(10,10,20,0.85)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '10px 16px', fontSize: '0.78rem', color: 'rgba(201,168,76,0.5)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif', letterSpacing: '0.1em', zIndex: 10, backdropFilter: 'blur(8px)' }}>
+        ← Menu
+      </a>
     </main>
   )
 }
