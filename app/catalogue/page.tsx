@@ -32,9 +32,9 @@ export default function CataloguePage() {
         setCards(data)
         setFiltered(data)
 
-        const univs = Array.from(new Set(data.map((c: any) => c.universe))) as string[]
-        const typs = Array.from(new Set(data.map((c: any) => c.card_type))) as string[]
-        const rars = Array.from(new Set(data.map((c: any) => c.rarity))) as string[]
+      const univs = Array.from(new Set(data.map((c: any) => c.universe))).sort() as string[]
+      const typs = Array.from(new Set(data.map((c: any) => c.card_type))).sort() as string[]
+      const rars = Array.from(new Set(data.map((c: any) => c.rarity))).sort() as string[]
 
         setUniverses(univs)
         setTypes(typs)
