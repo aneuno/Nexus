@@ -236,7 +236,7 @@ export default function GachaPage() {
           border-radius: 8px; overflow: hidden;
           cursor: pointer; transition: transform 0.2s;
         }
-        .summary-card:hover { transform: translateY(-3px); }
+        .summary-card:hover { transform: translateY(-3px); filter: brightness(1.1); }
       `}</style>
 
       {/* Topbar */}
@@ -419,8 +419,8 @@ export default function GachaPage() {
       {/* Modal carte sélectionnée */}
       {selectedCard && (
         <div onClick={() => setSelectedCard(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '20px' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f1e', border: `2px solid ${rarityColor(selectedCard.rarity)}`, borderRadius: '12px', padding: '24px', maxWidth: '420px', width: '100%', display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-            <div style={{ width: '160px', height: '224px', borderRadius: '8px', overflow: 'hidden', background: '#141428', flexShrink: 0, boxShadow: `0 0 24px ${rarityGlow(selectedCard.rarity)}` }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f1e', border: `2px solid ${rarityColor(selectedCard.rarity)}`, borderRadius: '12px', padding: '28px', maxWidth: '620px', width: '100%', display: 'flex', gap: '24px', alignItems: 'flex-start', boxShadow: `0 0 40px ${rarityGlow(selectedCard.rarity)}` }}>
+            <div style={{ width: '240px', height: '336px', borderRadius: '8px', overflow: 'hidden', background: '#141428', flexShrink: 0, boxShadow: `0 0 24px ${rarityGlow(selectedCard.rarity)}` }}>
               {selectedCard.image_url ? (
                 <img src={selectedCard.image_url} alt={selectedCard.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
@@ -428,28 +428,28 @@ export default function GachaPage() {
               )}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#c9a84c', marginBottom: '6px' }}>{selectedCard.name}</div>
-              <div style={{ fontSize: '0.75rem', color: rarityColor(selectedCard.rarity), marginBottom: '4px', letterSpacing: '0.1em' }}>{selectedCard.rarity?.toUpperCase()}</div>
-              <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.6)', marginBottom: '12px' }}>{selectedCard.universe}</div>
+              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.2rem', color: '#c9a84c', marginBottom: '8px' }}>{selectedCard.name}</div>
+              <div style={{ fontSize: '0.82rem', color: rarityColor(selectedCard.rarity), marginBottom: '4px', letterSpacing: '0.1em' }}>{selectedCard.rarity?.toUpperCase()}</div>
+              <div style={{ fontSize: '0.78rem', color: 'rgba(201,168,76,0.6)', marginBottom: '16px' }}>{selectedCard.universe}</div>
               {(selectedCard.atk !== null && selectedCard.atk !== undefined) && (
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                  <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem' }}>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                  <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '6px 14px', fontSize: '0.82rem' }}>
                     <span style={{ color: 'rgba(201,168,76,0.5)' }}>ATK </span>
-                    <span style={{ color: '#c9a84c', fontWeight: 600 }}>{selectedCard.atk}</span>
+                    <span style={{ color: '#c9a84c', fontWeight: 600, fontSize: '1rem' }}>{selectedCard.atk}</span>
                   </div>
-                  <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem' }}>
+                  <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '6px 14px', fontSize: '0.82rem' }}>
                     <span style={{ color: 'rgba(201,168,76,0.5)' }}>DEF </span>
-                    <span style={{ color: '#c9a84c', fontWeight: 600 }}>{selectedCard.def}</span>
+                    <span style={{ color: '#c9a84c', fontWeight: 600, fontSize: '1rem' }}>{selectedCard.def}</span>
                   </div>
                 </div>
               )}
               {selectedCard.description && (
-                <div style={{ fontSize: '0.78rem', color: 'rgba(232,224,204,0.6)', lineHeight: '1.6', marginBottom: '8px', borderTop: '1px solid rgba(201,168,76,0.15)', paddingTop: '10px' }}>{selectedCard.description}</div>
+                <div style={{ fontSize: '0.82rem', color: 'rgba(232,224,204,0.6)', lineHeight: '1.6', marginBottom: '10px', borderTop: '1px solid rgba(201,168,76,0.15)', paddingTop: '12px' }}>{selectedCard.description}</div>
               )}
               {selectedCard.effect && (
-                <div style={{ fontSize: '0.78rem', color: 'rgba(232,224,204,0.75)', lineHeight: '1.6', padding: '8px 10px', background: 'rgba(201,168,76,0.04)', borderRadius: '4px', border: '1px solid rgba(201,168,76,0.12)' }}>{selectedCard.effect}</div>
+                <div style={{ fontSize: '0.82rem', color: 'rgba(232,224,204,0.75)', lineHeight: '1.6', padding: '10px 12px', background: 'rgba(201,168,76,0.04)', borderRadius: '4px', border: '1px solid rgba(201,168,76,0.12)' }}>{selectedCard.effect}</div>
               )}
-              <button onClick={() => setSelectedCard(null)} style={{ marginTop: '14px', width: '100%', padding: '8px', background: 'transparent', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: 'rgba(201,168,76,0.6)', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem' }}>
+              <button onClick={() => setSelectedCard(null)} style={{ marginTop: '16px', width: '100%', padding: '10px', background: 'transparent', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: 'rgba(201,168,76,0.6)', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.88rem', letterSpacing: '0.1em' }}>
                 Fermer
               </button>
             </div>
