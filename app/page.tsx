@@ -20,7 +20,7 @@ export default function HomePage() {
       }
       const { data } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, avatars(*)')
         .eq('id', session.user.id)
         .single()
       setProfile(data)
@@ -71,8 +71,12 @@ export default function HomePage() {
         <span style={{ fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '1rem', letterSpacing: '0.15em', flexShrink: 0 }}>NEXUS CHRONICLES</span>
         <div style={{ width: '1px', height: '20px', background: 'rgba(201,168,76,0.2)' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-          <div style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1.5px solid #c9a84c', background: '#1a1a35', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>
-            {profile.avatar || '🐉'}
+          <div style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1.5px solid #c9a84c', background: '#1a1a35', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>
+            {profile.avatars?.image_url ? (
+              <img src={profile.avatars.image_url} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              profile.avatar || '🐉'
+            )}
           </div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.88rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile.username}</div>
@@ -115,7 +119,7 @@ export default function HomePage() {
             <span style={{ fontSize: '1.4rem' }}>🗃️</span>
             <div>
               <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Inventaire</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Cartes & decks</div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Cartes & cosmétiques</div>
             </div>
           </a>
 
