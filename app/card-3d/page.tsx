@@ -10,7 +10,6 @@ export default function Card3D() {
   const [lightColor1, setLightColor1] = useState('#c9a84c')
   const [lightColor2, setLightColor2] = useState('#9b4cc9')
   const [rainbow, setRainbow] = useState(false)
-  const [bgColor, setBgColor] = useState('#0a0a14')
   const [imageUrl, setImageUrl] = useState('https://res.cloudinary.com/daowtjque/image/upload/v1773541131/Strelitzia_V2_upflzl.png')
   const [inputUrl, setInputUrl] = useState('https://res.cloudinary.com/daowtjque/image/upload/v1773541131/Strelitzia_V2_upflzl.png')
 
@@ -120,46 +119,31 @@ export default function Card3D() {
         sceneRef.current.edgeMaterial = edgeMaterial
         sceneRef.current.particleMaterial = particleMaterial
 
-        let autoRotate = true
         let mouseX = 0
         let mouseY = 0
         let targetX = 0
         let targetY = 0
-        let autoAngle = 0
         let hue = 0
 
-        mount.addEventListener('mousemove', (e: MouseEvent) => {
-          autoRotate = false
-          const rect = mount.getBoundingClientRect()
-          mouseX = ((e.clientX - rect.left) / rect.width - 0.5) * 2
-          mouseY = -((e.clientY - rect.top) / rect.height - 0.5) * 2
+        // Suivre le curseur partout sur la page
+        window.addEventListener('mousemove', (e: MouseEvent) => {
+          mouseX = ((e.clientX / window.innerWidth) - 0.5) * 2
+          mouseY = -((e.clientY / window.innerHeight) - 0.5) * 2
         })
-        mount.addEventListener('mouseleave', () => { autoRotate = true })
 
         function animate() {
           requestAnimationFrame(animate)
           const time = Date.now() * 0.001
 
-          if (autoRotate) {
-            autoAngle += 0.008
-            const ry = Math.sin(autoAngle) * Math.PI
-            const rx = Math.sin(autoAngle * 0.5) * 0.15
-            cardFront.rotation.y = ry
-            cardBack.rotation.y = ry
-            edge.rotation.y = ry
-            cardFront.rotation.x = rx
-            cardBack.rotation.x = rx
-            edge.rotation.x = rx
-          } else {
-            targetX += (mouseX * 0.8 - targetX) * 0.05
-            targetY += (mouseY * 0.5 - targetY) * 0.05
-            cardFront.rotation.y = targetX
-            cardBack.rotation.y = targetX
-            edge.rotation.y = targetX
-            cardFront.rotation.x = -targetY
-            cardBack.rotation.x = -targetY
-            edge.rotation.x = -targetY
-          }
+          // Toujours suivre le curseur
+          targetX += (mouseX * 0.8 - targetX) * 0.05
+          targetY += (mouseY * 0.5 - targetY) * 0.05
+          cardFront.rotation.y = targetX
+          cardBack.rotation.y = targetX
+          edge.rotation.y = targetX
+          cardFront.rotation.x = -targetY
+          cardBack.rotation.x = -targetY
+          edge.rotation.x = -targetY
 
           if (sceneRef.current.rainbow) {
             hue = (hue + 1) % 360
@@ -213,7 +197,7 @@ export default function Card3D() {
   }, [lightIntensity])
 
   return (
-    <main style={{ minHeight: '100vh', background: bgColor, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', transition: 'background 0.5s' }}>
+    <main style={{ minHeight: '100vh', background: '#0a0a14', overflow: 'hidden', position: 'relative' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Rajdhani:wght@400;500;600&display=swap');
         .slider { width: 100%; accent-color: #c9a84c; cursor: pointer; }
@@ -232,112 +216,65 @@ export default function Card3D() {
         .rainbow-btn:hover:not(.active) { border-color: rgba(201,168,76,0.5); color: #e8e0cc; }
       `}</style>
 
-      <div style={{ fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '0.8rem', letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: '16px', opacity: 0.6 }}>
+      {/* Zone 3D plein écran */}
+      <div ref={mountRef} style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', cursor: 'none' }} />
+
+      {/* Titre */}
+      <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '0.8rem', letterSpacing: '0.3em', textTransform: 'uppercase', opacity: 0.5, zIndex: 10, pointerEvents: 'none' }}>
         Nexus Chronicles — Visualiseur 3D
       </div>
 
-      <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: '1000px' }}>
+      {/* Panneau gauche */}
+      <div style={{ position: 'fixed', left: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(10,10,20,0.85)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '16px', width: '200px', zIndex: 10, backdropFilter: 'blur(8px)' }}>
 
-        {/* Panneau gauche */}
-        <div style={{ background: 'rgba(15,15,30,0.9)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '16px', width: '200px', flexShrink: 0 }}>
+        <div className="panel-label">Éclairage</div>
 
-          <div className="panel-label">Éclairage</div>
-
-          {/* Lumière 1 */}
-          <div style={{ marginBottom: '12px' }}>
-            <div style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', marginBottom: '6px', fontFamily: 'Rajdhani, sans-serif' }}>Lumière 1</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input
-                type="color"
-                className="color-input"
-                value={lightColor1}
-                onChange={e => { setLightColor1(e.target.value); setRainbow(false) }}
-              />
-              <span style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', fontFamily: 'Rajdhani, sans-serif' }}>{lightColor1}</span>
-            </div>
-          </div>
-
-          {/* Lumière 2 */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', marginBottom: '6px', fontFamily: 'Rajdhani, sans-serif' }}>Lumière 2</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input
-                type="color"
-                className="color-input"
-                value={lightColor2}
-                onChange={e => { setLightColor2(e.target.value); setRainbow(false) }}
-              />
-              <span style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', fontFamily: 'Rajdhani, sans-serif' }}>{lightColor2}</span>
-            </div>
-          </div>
-
-          {/* Rainbow */}
-          <div style={{ marginBottom: '16px' }}>
-            <button
-              className={`rainbow-btn ${rainbow ? 'active' : ''}`}
-              onClick={() => setRainbow(prev => !prev)}
-            >
-              🌈 Rainbow
-            </button>
-          </div>
-
-          {/* Intensité */}
-          <div className="panel-label" style={{ marginTop: '4px' }}>Intensité</div>
-          <input
-            type="range"
-            className="slider"
-            min="0.5"
-            max="5"
-            step="0.1"
-            value={lightIntensity}
-            onChange={e => setLightIntensity(parseFloat(e.target.value))}
-            style={{ marginBottom: '6px' }}
-          />
-          <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.4)', marginBottom: '16px', textAlign: 'center', fontFamily: 'Rajdhani, sans-serif' }}>{lightIntensity.toFixed(1)}</div>
-
-          {/* Fond */}
-          <div className="panel-label">Fond</div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {['#0a0a14', '#000000', '#0d0005', '#000d05', '#0d0d00'].map(c => (
-              <div
-                key={c}
-                onClick={() => setBgColor(c)}
-                style={{ width: '28px', height: '28px', borderRadius: '4px', background: c, border: bgColor === c ? '2px solid #c9a84c' : '1px solid rgba(201,168,76,0.3)', cursor: 'pointer' }}
-              />
-            ))}
+        <div style={{ marginBottom: '12px' }}>
+          <div style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', marginBottom: '6px', fontFamily: 'Rajdhani, sans-serif' }}>Lumière 1</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input type="color" className="color-input" value={lightColor1} onChange={e => { setLightColor1(e.target.value); setRainbow(false) }} />
+            <span style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', fontFamily: 'Rajdhani, sans-serif' }}>{lightColor1}</span>
           </div>
         </div>
 
-        {/* Carte 3D */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-          <div ref={mountRef} style={{ width: '500px', height: '480px', cursor: 'grab', borderRadius: '8px' }} />
-          <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.3)', letterSpacing: '0.15em', textTransform: 'uppercase', fontFamily: 'Rajdhani, sans-serif' }}>
-            Survole pour incliner · Auto-rotation si inactif
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', marginBottom: '6px', fontFamily: 'Rajdhani, sans-serif' }}>Lumière 2</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input type="color" className="color-input" value={lightColor2} onChange={e => { setLightColor2(e.target.value); setRainbow(false) }} />
+            <span style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', fontFamily: 'Rajdhani, sans-serif' }}>{lightColor2}</span>
           </div>
         </div>
 
-        {/* Panneau droit */}
-        <div style={{ background: 'rgba(15,15,30,0.9)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '16px', width: '200px', flexShrink: 0 }}>
-
-          <div className="panel-label">Image (URL)</div>
-          <input
-            value={inputUrl}
-            onChange={e => setInputUrl(e.target.value)}
-            placeholder="URL Cloudinary..."
-            style={{ width: '100%', padding: '7px 10px', background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: '#e8e0cc', fontSize: '0.72rem', marginBottom: '8px', boxSizing: 'border-box', fontFamily: 'Rajdhani, sans-serif' }}
-          />
-          <button
-            onClick={() => setImageUrl(inputUrl)}
-            style={{ width: '100%', padding: '8px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '4px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', marginBottom: '16px', fontFamily: 'Cinzel, serif' }}
-          >
-            Charger
+        <div style={{ marginBottom: '16px' }}>
+          <button className={`rainbow-btn ${rainbow ? 'active' : ''}`} onClick={() => setRainbow(prev => !prev)}>
+            🌈 Rainbow
           </button>
-
-          <div style={{ marginTop: '8px' }}>
-            <a href="/card-maker" style={{ display: 'block', textAlign: 'center', fontSize: '0.75rem', color: 'rgba(201,168,76,0.4)', textDecoration: 'none', marginBottom: '8px', fontFamily: 'Rajdhani, sans-serif' }}>→ Card Maker</a>
-            <a href="/" style={{ display: 'block', textAlign: 'center', fontSize: '0.75rem', color: 'rgba(201,168,76,0.4)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif' }}>← Menu</a>
-          </div>
         </div>
+
+        <div className="panel-label">Intensité</div>
+        <input type="range" className="slider" min="0.5" max="5" step="0.1" value={lightIntensity} onChange={e => setLightIntensity(parseFloat(e.target.value))} style={{ marginBottom: '6px' }} />
+        <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.4)', marginBottom: '4px', textAlign: 'center', fontFamily: 'Rajdhani, sans-serif' }}>{lightIntensity.toFixed(1)}</div>
+      </div>
+
+      {/* Panneau droit */}
+      <div style={{ position: 'fixed', right: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(10,10,20,0.85)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '16px', width: '200px', zIndex: 10, backdropFilter: 'blur(8px)' }}>
+
+        <div className="panel-label">Image (URL)</div>
+        <input
+          value={inputUrl}
+          onChange={e => setInputUrl(e.target.value)}
+          placeholder="URL Cloudinary..."
+          style={{ width: '100%', padding: '7px 10px', background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: '#e8e0cc', fontSize: '0.72rem', marginBottom: '8px', boxSizing: 'border-box', fontFamily: 'Rajdhani, sans-serif' }}
+        />
+        <button
+          onClick={() => setImageUrl(inputUrl)}
+          style={{ width: '100%', padding: '8px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '4px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', marginBottom: '16px', fontFamily: 'Cinzel, serif' }}
+        >
+          Charger
+        </button>
+
+        <a href="/card-maker" style={{ display: 'block', textAlign: 'center', fontSize: '0.75rem', color: 'rgba(201,168,76,0.4)', textDecoration: 'none', marginBottom: '8px', fontFamily: 'Rajdhani, sans-serif' }}>→ Card Maker</a>
+        <a href="/" style={{ display: 'block', textAlign: 'center', fontSize: '0.75rem', color: 'rgba(201,168,76,0.4)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif' }}>← Menu</a>
       </div>
     </main>
   )
