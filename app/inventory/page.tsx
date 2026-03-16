@@ -24,21 +24,15 @@ export default function InventoryPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { window.location.href = '/login'; return }
 
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single()
+      const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
       setProfile(prof)
 
-      // Cartes du joueur
       const { data: pc } = await supabase
         .from('player_cards')
         .select('*, cards(*)')
         .eq('player_id', session.user.id)
       setPlayerCards(pc || [])
 
-      // Inventaire cosmétiques
       const { data: inv } = await supabase
         .from('player_inventory')
         .select('*')
@@ -89,6 +83,16 @@ export default function InventoryPage() {
       legendary: '#c9a84c'
     }
     return colors[rarity] || 'rgba(201,168,76,0.3)'
+  }
+
+  const rarityGlow = (rarity: string) => {
+    const glows: Record<string, string> = {
+      common: 'rgba(180,180,180,0.2)',
+      rare: 'rgba(76,153,201,0.5)',
+      epic: 'rgba(155,76,201,0.6)',
+      legendary: 'rgba(201,168,76,0.8)'
+    }
+    return glows[rarity] || 'rgba(201,168,76,0.3)'
   }
 
   if (loading) return (
@@ -208,10 +212,7 @@ export default function InventoryPage() {
                     </div>
                     <div style={{ fontSize: '0.78rem', color: '#e8e0cc', marginBottom: '2px' }}>{av.name}</div>
                     <div style={{ fontSize: '0.65rem', color: rarityColor(av.rarity) }}>{av.universe || 'Nexus'}</div>
-                    <button
-                      className={`equip-btn ${profile?.avatar_id === av.id ? 'active' : ''}`}
-                      onClick={() => equipItem('avatar_id', av.id)}
-                    >
+                    <button className={`equip-btn ${profile?.avatar_id === av.id ? 'active' : ''}`} onClick={() => equipItem('avatar_id', av.id)}>
                       {profile?.avatar_id === av.id ? '✓ Équipé' : 'Équiper'}
                     </button>
                   </div>
@@ -241,10 +242,7 @@ export default function InventoryPage() {
                     </div>
                     <div style={{ fontSize: '0.78rem', color: '#e8e0cc', marginBottom: '2px' }}>{bn.name}</div>
                     <div style={{ fontSize: '0.65rem', color: rarityColor(bn.rarity) }}>{bn.universe || 'Nexus'}</div>
-                    <button
-                      className={`equip-btn ${profile?.banner_id === bn.id ? 'active' : ''}`}
-                      onClick={() => equipItem('banner_id', bn.id)}
-                    >
+                    <button className={`equip-btn ${profile?.banner_id === bn.id ? 'active' : ''}`} onClick={() => equipItem('banner_id', bn.id)}>
                       {profile?.banner_id === bn.id ? '✓ Équipée' : 'Équiper'}
                     </button>
                   </div>
@@ -311,47 +309,52 @@ export default function InventoryPage() {
 
       {/* Modal carte */}
       {selected?.type === 'card' && (
-        <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f1e', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '12px', padding: '24px', maxWidth: '400px', width: '100%', position: 'relative' }}>
-            <button onClick={() => setSelected(null)} style={{ position: 'absolute', top: '12px', right: '12px', background: 'transparent', border: 'none', color: 'rgba(201,168,76,0.5)', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
-            <div style={{ display: 'flex', gap: '16px' }}>
-              <div style={{ width: '140px', height: '196px', borderRadius: '8px', overflow: 'hidden', background: '#141428', border: '2px solid ' + rarityColor(selected.data.cards?.rarity), flexShrink: 0 }}>
-                {selected.data.cards?.image_url ? (
-                  <img src={selected.data.cards.image_url} alt={selected.data.cards.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', opacity: 0.2 }}>🎴</div>
-                )}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '0.95rem', marginBottom: '6px' }}>{selected.data.cards?.name}</div>
-                <div style={{ fontSize: '0.72rem', color: rarityColor(selected.data.cards?.rarity), marginBottom: '8px' }}>{selected.data.cards?.rarity}</div>
-                <div style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.6)', marginBottom: '8px' }}>{selected.data.cards?.universe}</div>
-                {selected.data.quantity > 1 && (
-                  <div style={{ fontSize: '0.75rem', color: 'rgba(232,224,204,0.5)', marginBottom: '8px' }}>Quantité : <span style={{ color: '#c9a84c', fontWeight: 600 }}>x{selected.data.quantity}</span></div>
-                )}
-                {selected.data.cards?.atk !== undefined && (
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                    <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem' }}>
-                      <span style={{ color: 'rgba(201,168,76,0.5)' }}>ATK </span>
-                      <span style={{ color: '#c9a84c', fontWeight: 600 }}>{selected.data.cards.atk}</span>
-                    </div>
-                    <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem' }}>
-                      <span style={{ color: 'rgba(201,168,76,0.5)' }}>DEF </span>
-                      <span style={{ color: '#c9a84c', fontWeight: 600 }}>{selected.data.cards.def}</span>
-                    </div>
+        <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f1e', border: `2px solid ${rarityColor(selected.data.cards?.rarity)}`, borderRadius: '12px', padding: '28px', maxWidth: '620px', width: '100%', display: 'flex', gap: '24px', alignItems: 'flex-start', boxShadow: `0 0 40px ${rarityGlow(selected.data.cards?.rarity)}` }}>
+            <div style={{ width: '240px', height: '336px', borderRadius: '8px', overflow: 'hidden', background: '#141428', border: `2px solid ${rarityColor(selected.data.cards?.rarity)}`, flexShrink: 0, boxShadow: `0 0 24px ${rarityGlow(selected.data.cards?.rarity)}` }}>
+              {selected.data.cards?.image_url ? (
+                <img src={selected.data.cards.image_url} alt={selected.data.cards.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', opacity: 0.2 }}>🎴</div>
+              )}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '1.2rem', marginBottom: '8px' }}>{selected.data.cards?.name}</div>
+              <div style={{ fontSize: '0.82rem', color: rarityColor(selected.data.cards?.rarity), marginBottom: '4px', letterSpacing: '0.1em' }}>{selected.data.cards?.rarity?.toUpperCase()}</div>
+              <div style={{ fontSize: '0.78rem', color: 'rgba(201,168,76,0.6)', marginBottom: '16px' }}>{selected.data.cards?.universe}</div>
+              {selected.data.quantity > 1 && (
+                <div style={{ fontSize: '0.82rem', color: 'rgba(232,224,204,0.5)', marginBottom: '12px' }}>Quantité : <span style={{ color: '#c9a84c', fontWeight: 600 }}>x{selected.data.quantity}</span></div>
+              )}
+              {selected.data.cards?.atk !== undefined && (
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                  <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '6px 14px', fontSize: '0.82rem' }}>
+                    <span style={{ color: 'rgba(201,168,76,0.5)' }}>ATK </span>
+                    <span style={{ color: '#c9a84c', fontWeight: 600, fontSize: '1rem' }}>{selected.data.cards.atk}</span>
                   </div>
-                )}
-                {selected.data.cards?.effect && (
-                  <div style={{ fontSize: '0.75rem', color: 'rgba(232,224,204,0.65)', lineHeight: '1.5', padding: '8px', background: 'rgba(201,168,76,0.04)', borderRadius: '4px', border: '1px solid rgba(201,168,76,0.1)' }}>
-                    {selected.data.cards.effect}
+                  <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '6px 14px', fontSize: '0.82rem' }}>
+                    <span style={{ color: 'rgba(201,168,76,0.5)' }}>DEF </span>
+                    <span style={{ color: '#c9a84c', fontWeight: 600, fontSize: '1rem' }}>{selected.data.cards.def}</span>
                   </div>
-                )}
-                {selected.data.cards?.image_url && (
-                  <a href={'/card-3d?url=' + encodeURIComponent(selected.data.cards.image_url)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '10px', padding: '8px', background: 'rgba(155,76,201,0.2)', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '6px', color: '#c9a84c', fontSize: '0.78rem', textDecoration: 'none' }}>
-                    🌀 Voir en 3D
-                  </a>
-                )}
-              </div>
+                </div>
+              )}
+              {selected.data.cards?.description && (
+                <div style={{ fontSize: '0.82rem', color: 'rgba(232,224,204,0.6)', lineHeight: '1.6', borderTop: '1px solid rgba(201,168,76,0.15)', paddingTop: '12px', marginBottom: '10px' }}>
+                  {selected.data.cards.description}
+                </div>
+              )}
+              {selected.data.cards?.effect && (
+                <div style={{ fontSize: '0.82rem', color: 'rgba(232,224,204,0.75)', lineHeight: '1.6', padding: '10px 12px', background: 'rgba(201,168,76,0.04)', borderRadius: '4px', border: '1px solid rgba(201,168,76,0.12)' }}>
+                  {selected.data.cards.effect}
+                </div>
+              )}
+              {selected.data.cards?.image_url && (
+                <a href={'/card-3d?url=' + encodeURIComponent(selected.data.cards.image_url)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '14px', padding: '10px', background: 'rgba(155,76,201,0.2)', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '6px', color: '#c9a84c', fontSize: '0.82rem', textDecoration: 'none' }}>
+                  🌀 Voir en 3D
+                </a>
+              )}
+              <button onClick={() => setSelected(null)} style={{ marginTop: '10px', width: '100%', padding: '10px', background: 'transparent', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: 'rgba(201,168,76,0.6)', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.88rem' }}>
+                Fermer
+              </button>
             </div>
           </div>
         </div>
