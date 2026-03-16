@@ -162,14 +162,6 @@ export default function HomePage() {
               <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Créer une carte</div>
             </div>
           </a>
-
-          <a href="/card-3d" className="nav-main-btn">
-            <span style={{ fontSize: '1.4rem' }}>✨</span>
-            <div>
-              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Visu 3D</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Aperçu holographique</div>
-            </div>
-          </a>
         </div>
 
         {/* CENTRE — Portail animé */}
