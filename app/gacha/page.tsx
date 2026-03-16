@@ -80,16 +80,29 @@ export default function GachaPage() {
       return
     }
 
-    const { data: pool } = await supabase
-      .from('booster_card_pool')
-      .select('*, cards(*)')
-      .eq('template_id', template.id)
-
-    if (!pool || pool.length === 0) {
+    const cardPool = template.card_pool
+    if (!cardPool || cardPool.length === 0) {
       alert('Ce booster ne contient aucune carte configurée !')
       setOpening(false)
       return
     }
+
+    const cardIds = cardPool.map((e: any) => e.card_id)
+    const { data: cardsData } = await supabase
+      .from('cards')
+      .select('*')
+      .in('id', cardIds)
+
+    if (!cardsData || cardsData.length === 0) {
+      alert('Cartes introuvables !')
+      setOpening(false)
+      return
+    }
+
+    const pool = cardPool.map((e: any) => ({
+      weight: e.weight,
+      cards: cardsData.find((c: any) => c.id === e.card_id)
+    })).filter((e: any) => e.cards)
 
     const totalWeight = pool.reduce((sum: number, p: any) => sum + p.weight, 0)
     const drawnCards: any[] = []
