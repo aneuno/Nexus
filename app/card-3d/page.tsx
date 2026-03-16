@@ -10,8 +10,6 @@ export default function Card3D() {
   const [lightColor1, setLightColor1] = useState('#c9a84c')
   const [lightColor2, setLightColor2] = useState('#9b4cc9')
   const [rainbow, setRainbow] = useState(false)
-  const [imageUrl, setImageUrl] = useState('https://res.cloudinary.com/daowtjque/image/upload/v1773541131/Strelitzia_V2_upflzl.png')
-  const [inputUrl, setInputUrl] = useState('https://res.cloudinary.com/daowtjque/image/upload/v1773541131/Strelitzia_V2_upflzl.png')
 
   function hexToInt(hex: string) {
     return parseInt(hex.replace('#', ''), 16)
@@ -61,7 +59,7 @@ export default function Card3D() {
 
       const loader = new THREE.TextureLoader()
       loader.crossOrigin = 'anonymous'
-      loader.load(imageUrl, (texture: any) => {
+      loader.load('https://res.cloudinary.com/daowtjque/image/upload/v1773541131/Strelitzia_V2_upflzl.png', (texture: any) => {
         const geometry = new THREE.PlaneGeometry(2, 2.85)
 
         const material = new THREE.MeshStandardMaterial({
@@ -125,7 +123,6 @@ export default function Card3D() {
         let targetY = 0
         let hue = 0
 
-        // Suivre le curseur partout sur la page
         window.addEventListener('mousemove', (e: MouseEvent) => {
           mouseX = ((e.clientX / window.innerWidth) - 0.5) * 2
           mouseY = -((e.clientY / window.innerHeight) - 0.5) * 2
@@ -135,7 +132,6 @@ export default function Card3D() {
           requestAnimationFrame(animate)
           const time = Date.now() * 0.001
 
-          // Toujours suivre le curseur
           targetX += (mouseX * 0.8 - targetX) * 0.05
           targetY += (mouseY * 0.5 - targetY) * 0.05
           cardFront.rotation.y = targetX
@@ -186,7 +182,7 @@ export default function Card3D() {
     return () => {
       if (mountRef.current) mountRef.current.innerHTML = ''
     }
-  }, [imageUrl])
+  }, [])
 
   useEffect(() => { sceneRef.current.rainbow = rainbow }, [rainbow])
   useEffect(() => { sceneRef.current.lc1 = lightColor1 }, [lightColor1])
@@ -217,7 +213,7 @@ export default function Card3D() {
       `}</style>
 
       {/* Zone 3D plein écran */}
-      <div ref={mountRef} style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', cursor: 'none' }} />
+      <div ref={mountRef} style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', cursor: 'default' }} />
 
       {/* Titre */}
       <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '0.8rem', letterSpacing: '0.3em', textTransform: 'uppercase', opacity: 0.5, zIndex: 10, pointerEvents: 'none' }}>
@@ -256,25 +252,10 @@ export default function Card3D() {
         <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.4)', marginBottom: '4px', textAlign: 'center', fontFamily: 'Rajdhani, sans-serif' }}>{lightIntensity.toFixed(1)}</div>
       </div>
 
-      {/* Panneau droit */}
-      <div style={{ position: 'fixed', right: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(10,10,20,0.85)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '16px', width: '200px', zIndex: 10, backdropFilter: 'blur(8px)' }}>
-
-        <div className="panel-label">Image (URL)</div>
-        <input
-          value={inputUrl}
-          onChange={e => setInputUrl(e.target.value)}
-          placeholder="URL Cloudinary..."
-          style={{ width: '100%', padding: '7px 10px', background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: '#e8e0cc', fontSize: '0.72rem', marginBottom: '8px', boxSizing: 'border-box', fontFamily: 'Rajdhani, sans-serif' }}
-        />
-        <button
-          onClick={() => setImageUrl(inputUrl)}
-          style={{ width: '100%', padding: '8px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '4px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', marginBottom: '16px', fontFamily: 'Cinzel, serif' }}
-        >
-          Charger
-        </button>
-
-        <a href="/card-maker" style={{ display: 'block', textAlign: 'center', fontSize: '0.75rem', color: 'rgba(201,168,76,0.4)', textDecoration: 'none', marginBottom: '8px', fontFamily: 'Rajdhani, sans-serif' }}>→ Card Maker</a>
-        <a href="/" style={{ display: 'block', textAlign: 'center', fontSize: '0.75rem', color: 'rgba(201,168,76,0.4)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif' }}>← Menu</a>
+      {/* Panneau droit — navigation */}
+      <div style={{ position: 'fixed', right: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(10,10,20,0.85)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '16px', zIndex: 10, backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <a href="/card-maker" style={{ textAlign: 'center', fontSize: '0.75rem', color: 'rgba(201,168,76,0.4)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif' }}>→ Card Maker</a>
+        <a href="/" style={{ textAlign: 'center', fontSize: '0.75rem', color: 'rgba(201,168,76,0.4)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif' }}>← Menu</a>
       </div>
     </main>
   )
