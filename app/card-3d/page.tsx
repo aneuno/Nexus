@@ -20,6 +20,10 @@ export default function Card3D() {
     if (!mount) return
     mount.innerHTML = ''
 
+    const params = new URLSearchParams(window.location.search)
+    const urlParam = params.get('url')
+    if (urlParam) sceneRef.current.imageUrl = urlParam
+
     const script1 = document.createElement('script')
     script1.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
     script1.onload = () => initScene()
@@ -59,7 +63,8 @@ export default function Card3D() {
 
       const loader = new THREE.TextureLoader()
       loader.crossOrigin = 'anonymous'
-      loader.load('https://res.cloudinary.com/daowtjque/image/upload/v1773541131/Strelitzia_V2_upflzl.png', (texture: any) => {
+      const urlToLoad = sceneRef.current.imageUrl || 'https://res.cloudinary.com/daowtjque/image/upload/v1773541131/Strelitzia_V2_upflzl.png'
+      loader.load(urlToLoad, (texture: any) => {
         const geometry = new THREE.PlaneGeometry(2, 2.85)
 
         const material = new THREE.MeshStandardMaterial({
@@ -212,19 +217,14 @@ export default function Card3D() {
         .rainbow-btn:hover:not(.active) { border-color: rgba(201,168,76,0.5); color: #e8e0cc; }
       `}</style>
 
-      {/* Zone 3D plein écran */}
       <div ref={mountRef} style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', cursor: 'default' }} />
 
-      {/* Titre */}
       <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '0.8rem', letterSpacing: '0.3em', textTransform: 'uppercase', opacity: 0.5, zIndex: 10, pointerEvents: 'none' }}>
         Nexus Chronicles — Visualiseur 3D
       </div>
 
-      {/* Panneau gauche */}
       <div style={{ position: 'fixed', left: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(10,10,20,0.85)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '16px', width: '200px', zIndex: 10, backdropFilter: 'blur(8px)' }}>
-
         <div className="panel-label">Éclairage</div>
-
         <div style={{ marginBottom: '12px' }}>
           <div style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', marginBottom: '6px', fontFamily: 'Rajdhani, sans-serif' }}>Lumière 1</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -232,7 +232,6 @@ export default function Card3D() {
             <span style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', fontFamily: 'Rajdhani, sans-serif' }}>{lightColor1}</span>
           </div>
         </div>
-
         <div style={{ marginBottom: '16px' }}>
           <div style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', marginBottom: '6px', fontFamily: 'Rajdhani, sans-serif' }}>Lumière 2</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -240,22 +239,19 @@ export default function Card3D() {
             <span style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)', fontFamily: 'Rajdhani, sans-serif' }}>{lightColor2}</span>
           </div>
         </div>
-
         <div style={{ marginBottom: '16px' }}>
           <button className={`rainbow-btn ${rainbow ? 'active' : ''}`} onClick={() => setRainbow(prev => !prev)}>
             🌈 Rainbow
           </button>
         </div>
-
         <div className="panel-label">Intensité</div>
         <input type="range" className="slider" min="0.5" max="5" step="0.1" value={lightIntensity} onChange={e => setLightIntensity(parseFloat(e.target.value))} style={{ marginBottom: '6px' }} />
         <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.4)', marginBottom: '4px', textAlign: 'center', fontFamily: 'Rajdhani, sans-serif' }}>{lightIntensity.toFixed(1)}</div>
       </div>
 
-      {/* Bouton menu en bas à gauche */}
-      <a href="/" style={{ position: 'fixed', top: '20px', left: '20px', background: 'rgba(10,10,20,0.85)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '10px 16px', fontSize: '0.78rem', color: 'rgba(201,168,76,0.5)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif', letterSpacing: '0.1em', zIndex: 10, backdropFilter: 'blur(8px)' }}>
-        ← Menu
-      </a>
+      <button onClick={() => window.history.back()} style={{ position: 'fixed', top: '20px', right: '20px', background: 'rgba(10,10,20,0.85)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '10px 16px', fontSize: '0.78rem', color: 'rgba(201,168,76,0.5)', fontFamily: 'Rajdhani, sans-serif', letterSpacing: '0.1em', zIndex: 10, backdropFilter: 'blur(8px)', cursor: 'pointer' }}>
+        ← Retour
+      </button>
     </main>
   )
 }
