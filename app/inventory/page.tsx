@@ -115,10 +115,7 @@ export default function InventoryPage() {
         }
         .tab-btn.active { color: #c9a84c; border-bottom-color: #c9a84c; }
         .tab-btn:hover { color: #e8e0cc; }
-        .card-thumb {
-          cursor: pointer; border-radius: 8px; overflow: hidden;
-          transition: all 0.2s;
-        }
+        .card-thumb { cursor: pointer; border-radius: 8px; overflow: hidden; transition: all 0.2s; }
         .card-thumb:hover { transform: translateY(-3px); filter: brightness(1.15); }
         .cosm-item {
           background: #0f0f1e; border: 1px solid rgba(201,168,76,0.2);
@@ -138,9 +135,8 @@ export default function InventoryPage() {
         .equip-btn.active { background: rgba(201,168,76,0.15); color: #c9a84c; border: 1px solid rgba(201,168,76,0.4); }
       `}</style>
 
-      {/* Topbar */}
       <div style={{ background: '#0a0a14', borderBottom: '1px solid rgba(201,168,76,0.2)', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-        <a href="/" style={{ fontSize: '0.8rem', color: 'rgba(201,168,76,0.5)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif' }}>← Menu</a>
+        <button onClick={() => window.history.back()} style={{ fontSize: '0.8rem', color: 'rgba(201,168,76,0.5)', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif' }}>← Retour</button>
         <div style={{ width: '1px', height: '16px', background: 'rgba(201,168,76,0.2)' }} />
         <span style={{ fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '1rem', letterSpacing: '0.15em' }}>Inventaire</span>
         <div style={{ flex: 1 }} />
@@ -150,7 +146,6 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div style={{ background: 'rgba(10,10,20,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', padding: '0 20px', display: 'flex', gap: '0', overflowX: 'auto', flexShrink: 0 }}>
         {tabs.map(tab => (
           <button key={tab.id} className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`} onClick={() => setActiveTab(tab.id)}>
@@ -160,10 +155,8 @@ export default function InventoryPage() {
         ))}
       </div>
 
-      {/* Contenu */}
       <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
 
-        {/* ── CARTES ── */}
         {activeTab === 'cards' && (
           <div>
             {playerCards.length === 0 ? (
@@ -192,16 +185,13 @@ export default function InventoryPage() {
           </div>
         )}
 
-        {/* ── PDP ── */}
         {activeTab === 'avatars' && (
           <div>
             {avatars.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(201,168,76,0.4)' }}>
                 <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>👤</div>
                 Aucune photo de profil débloquée
-                <div style={{ marginTop: '1rem' }}>
-                  <a href="/shop" style={{ color: '#c9a84c', fontSize: '0.82rem' }}>Visiter la boutique →</a>
-                </div>
+                <div style={{ marginTop: '1rem' }}><a href="/shop" style={{ color: '#c9a84c', fontSize: '0.82rem' }}>Visiter la boutique →</a></div>
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px' }}>
@@ -222,16 +212,13 @@ export default function InventoryPage() {
           </div>
         )}
 
-        {/* ── BANNIÈRES ── */}
         {activeTab === 'banners' && (
           <div>
             {banners.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(201,168,76,0.4)' }}>
                 <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🖼️</div>
                 Aucune bannière débloquée
-                <div style={{ marginTop: '1rem' }}>
-                  <a href="/shop" style={{ color: '#c9a84c', fontSize: '0.82rem' }}>Visiter la boutique →</a>
-                </div>
+                <div style={{ marginTop: '1rem' }}><a href="/shop" style={{ color: '#c9a84c', fontSize: '0.82rem' }}>Visiter la boutique →</a></div>
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px' }}>
@@ -252,7 +239,6 @@ export default function InventoryPage() {
           </div>
         )}
 
-        {/* ── BADGES ── */}
         {activeTab === 'badges' && (
           <div>
             {badges.length === 0 ? (
@@ -276,7 +262,6 @@ export default function InventoryPage() {
           </div>
         )}
 
-        {/* ── TITRES ── */}
         {activeTab === 'titles' && (
           <div>
             {titles.length === 0 ? (
@@ -292,11 +277,7 @@ export default function InventoryPage() {
                       <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: rarityColor(tl.rarity), marginBottom: '2px' }}>{tl.name}</div>
                       <div style={{ fontSize: '0.72rem', color: 'rgba(232,224,204,0.5)' }}>{tl.description}</div>
                     </div>
-                    <button
-                      className={`equip-btn ${profile?.title_id === tl.id ? 'active' : ''}`}
-                      style={{ width: 'auto', padding: '6px 14px' }}
-                      onClick={() => equipItem('title_id', tl.id)}
-                    >
+                    <button className={`equip-btn ${profile?.title_id === tl.id ? 'active' : ''}`} style={{ width: 'auto', padding: '6px 14px' }} onClick={() => equipItem('title_id', tl.id)}>
                       {profile?.title_id === tl.id ? '✓ Équipé' : 'Équiper'}
                     </button>
                   </div>
@@ -307,7 +288,6 @@ export default function InventoryPage() {
         )}
       </div>
 
-      {/* Modal carte */}
       {selected?.type === 'card' && (
         <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f1e', border: `2px solid ${rarityColor(selected.data.cards?.rarity)}`, borderRadius: '12px', padding: '28px', maxWidth: '620px', width: '100%', display: 'flex', gap: '24px', alignItems: 'flex-start', boxShadow: `0 0 40px ${rarityGlow(selected.data.cards?.rarity)}` }}>
