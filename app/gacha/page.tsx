@@ -26,13 +26,27 @@ export default function GachaPage() {
       const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
       setProfile(prof)
 
-      // Charger les boosters depuis le shop
       const { data: items } = await supabase
         .from('shop_items')
-        .select('*, booster_templates(*)')
+        .select('*')
         .eq('item_type', 'booster')
         .eq('is_active', true)
-      setBoosters(items || [])
+
+      if (items && items.length > 0) {
+        const templateIds = items.map((i: any) => i.item_id).filter(Boolean)
+        const { data: templates } = await supabase
+          .from('booster_templates')
+          .select('*')
+          .in('id', templateIds)
+
+        const merged = items.map((item: any) => ({
+          ...item,
+          booster_templates: templates?.find((t: any) => t.id === item.item_id) || null
+        }))
+        setBoosters(merged)
+      } else {
+        setBoosters([])
+      }
 
       setLoading(false)
     }
@@ -43,7 +57,6 @@ export default function GachaPage() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
 
-    // Vérifier les fonds
     if (booster.price_crystals > 0 && profile.crystals < booster.price_crystals) {
       alert('Cristaux insuffisants !')
       return
@@ -61,7 +74,12 @@ export default function GachaPage() {
 
     const template = booster.booster_templates
 
-    // Charger le pool de cartes du booster
+    if (!template) {
+      alert('Template introuvable !')
+      setOpening(false)
+      return
+    }
+
     const { data: pool } = await supabase
       .from('booster_card_pool')
       .select('*, cards(*)')
@@ -73,7 +91,6 @@ export default function GachaPage() {
       return
     }
 
-    // Tirer les cartes aléatoirement selon les poids
     const totalWeight = pool.reduce((sum: number, p: any) => sum + p.weight, 0)
     const drawnCards: any[] = []
 
@@ -88,14 +105,12 @@ export default function GachaPage() {
       }
     }
 
-    // Débiter le joueur
     const updates: any = {}
     if (booster.price_crystals > 0) updates.crystals = profile.crystals - booster.price_crystals
     if (booster.price_coins > 0) updates.nexus_coins = profile.nexus_coins - booster.price_coins
     await supabase.from('profiles').update(updates).eq('id', session.user.id)
     setProfile((prev: any) => ({ ...prev, ...updates }))
 
-    // Ajouter les cartes à l'inventaire
     for (const card of drawnCards) {
       const { data: existing } = await supabase
         .from('player_cards')
@@ -111,31 +126,14 @@ export default function GachaPage() {
       }
     }
 
-    // Enregistrer l'ouverture
     await supabase.from('booster_openings').insert({
       player_id: session.user.id,
       template_id: template.id,
       cards_received: drawnCards.map(c => c.id)
     })
 
-    // Lancer l'animation de révélation
     setRevealedCards(drawnCards)
-    animateReveal(drawnCards)
-  }
-
-  function animateReveal(cards: any[]) {
-    let index = 0
     setCurrentReveal(0)
-
-    const interval = setInterval(() => {
-      index++
-      if (index >= cards.length) {
-        clearInterval(interval)
-        setTimeout(() => setShowSummary(true), 800)
-      } else {
-        setCurrentReveal(index)
-      }
-    }, 1200)
   }
 
   function reset() {
@@ -182,66 +180,44 @@ export default function GachaPage() {
           50% { transform: scale(1.1) rotateY(90deg); opacity: 0.8; }
           100% { transform: scale(1) rotateY(0deg); opacity: 1; }
         }
-
         @keyframes legendaryPulse {
           0%,100% { box-shadow: 0 0 20px rgba(201,168,76,0.8), 0 0 40px rgba(201,168,76,0.4); }
           50% { box-shadow: 0 0 40px rgba(201,168,76,1), 0 0 80px rgba(201,168,76,0.6); }
         }
-
         @keyframes epicPulse {
           0%,100% { box-shadow: 0 0 20px rgba(155,76,201,0.7); }
           50% { box-shadow: 0 0 40px rgba(155,76,201,1); }
         }
-
         @keyframes rarePulse {
           0%,100% { box-shadow: 0 0 15px rgba(76,153,201,0.6); }
           50% { box-shadow: 0 0 30px rgba(76,153,201,0.9); }
         }
-
         @keyframes float {
           0%,100% { transform: translateY(0px); }
           50% { transform: translateY(-10px); }
         }
-
         @keyframes bgPulse {
           0%,100% { opacity: 0.3; }
           50% { opacity: 0.6; }
         }
-
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
-
-        .card-reveal {
-          animation: cardReveal 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
+        .card-reveal { animation: cardReveal 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .legendary-glow { animation: legendaryPulse 1.5s ease-in-out infinite; }
         .epic-glow { animation: epicPulse 1.5s ease-in-out infinite; }
         .rare-glow { animation: rarePulse 1.5s ease-in-out infinite; }
-
         .booster-card {
-          background: #0f0f1e;
-          border: 1px solid rgba(201,168,76,0.2);
-          border-radius: 12px;
-          padding: 20px;
-          cursor: pointer;
-          transition: all 0.3s;
-          text-align: center;
+          background: #0f0f1e; border: 1px solid rgba(201,168,76,0.2);
+          border-radius: 12px; padding: 20px; cursor: pointer;
+          transition: all 0.3s; text-align: center;
         }
         .booster-card:hover {
-          border-color: rgba(201,168,76,0.6);
-          transform: translateY(-4px);
+          border-color: rgba(201,168,76,0.6); transform: translateY(-4px);
           box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
-
-        .summary-card {
-          animation: fadeIn 0.4s ease forwards;
-          border-radius: 8px;
-          overflow: hidden;
-          position: relative;
-        }
+        .summary-card { animation: fadeIn 0.4s ease forwards; border-radius: 8px; overflow: hidden; }
       `}</style>
 
       {/* Topbar */}
@@ -259,14 +235,10 @@ export default function GachaPage() {
       {/* ── ANIMATION D'OUVERTURE ── */}
       {opening && !showSummary && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', padding: '20px' }}>
-
-          {/* Fond animé */}
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, rgba(155,76,201,0.15) 0%, rgba(201,168,76,0.08) 40%, transparent 70%)', animation: 'bgPulse 2s ease-in-out infinite', pointerEvents: 'none' }} />
 
-          {/* Carte en cours de révélation */}
           {currentReveal >= 0 && revealedCards[currentReveal] && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-
               <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: 'rgba(201,168,76,0.5)', letterSpacing: '0.3em', textTransform: 'uppercase' }}>
                 {currentReveal + 1} / {revealedCards.length}
               </div>
@@ -279,17 +251,9 @@ export default function GachaPage() {
                   revealedCards[currentReveal]?.rarity === 'rare' ? 'rare-glow' : ''
                 }`}
                 style={{
-                  width: '200px',
-                  height: '280px',
-                  borderRadius: '10px',
-                  overflow: 'hidden',
+                  width: '200px', height: '280px', borderRadius: '10px', overflow: 'hidden',
                   border: `2px solid ${rarityColor(revealedCards[currentReveal]?.rarity)}`,
-                  background: '#141428',
-                  animation: `cardReveal 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, ${
-                    revealedCards[currentReveal]?.rarity === 'legendary' ? 'legendaryPulse 1.5s ease-in-out infinite 0.8s' :
-                    revealedCards[currentReveal]?.rarity === 'epic' ? 'epicPulse 1.5s ease-in-out infinite 0.8s' :
-                    revealedCards[currentReveal]?.rarity === 'rare' ? 'rarePulse 1.5s ease-in-out infinite 0.8s' : ''
-                  }`
+                  background: '#141428'
                 }}
               >
                 {revealedCards[currentReveal]?.image_url ? (
@@ -335,17 +299,11 @@ export default function GachaPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '12px', marginBottom: '24px' }}>
             {revealedCards.map((card, i) => (
-              <div
-                key={i}
-                className="summary-card"
-                style={{ animationDelay: `${i * 0.08}s`, opacity: 0 }}
-              >
+              <div key={i} className="summary-card" style={{ animationDelay: `${i * 0.08}s`, opacity: 0 }}>
                 <div style={{
-                  width: '100%', aspectRatio: '0.72',
-                  background: '#141428',
+                  width: '100%', aspectRatio: '0.72', background: '#141428',
                   border: `2px solid ${rarityColor(card.rarity)}`,
-                  borderRadius: '8px',
-                  overflow: 'hidden',
+                  borderRadius: '8px 8px 0 0', overflow: 'hidden',
                   boxShadow: `0 0 12px ${rarityGlow(card.rarity)}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
@@ -364,10 +322,7 @@ export default function GachaPage() {
           </div>
 
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-            <button
-              onClick={reset}
-              style={{ padding: '12px 28px', background: 'transparent', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '6px', color: '#c9a84c', fontFamily: 'Cinzel, serif', fontSize: '0.88rem', letterSpacing: '0.1em', cursor: 'pointer' }}
-            >
+            <button onClick={reset} style={{ padding: '12px 28px', background: 'transparent', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '6px', color: '#c9a84c', fontFamily: 'Cinzel, serif', fontSize: '0.88rem', letterSpacing: '0.1em', cursor: 'pointer' }}>
               ← Retour
             </button>
             <button
@@ -398,8 +353,6 @@ export default function GachaPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px', maxWidth: '900px', margin: '0 auto' }}>
               {boosters.map(booster => (
                 <div key={booster.id} className="booster-card" onClick={() => openBooster(booster)}>
-
-                  {/* Image du booster */}
                   <div style={{ width: '100%', height: '160px', borderRadius: '8px', overflow: 'hidden', background: '#141428', marginBottom: '14px', border: '1px solid rgba(155,76,201,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                     {booster.image_url ? (
                       <img src={booster.image_url} alt={booster.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -412,7 +365,6 @@ export default function GachaPage() {
                   <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#c9a84c', marginBottom: '6px' }}>{booster.name}</div>
                   {booster.description && <div style={{ fontSize: '0.75rem', color: 'rgba(232,224,204,0.5)', marginBottom: '10px', lineHeight: '1.4' }}>{booster.description}</div>}
 
-                  {/* Infos template */}
                   {booster.booster_templates && (
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '12px' }}>
                       <span style={{ fontSize: '0.68rem', padding: '2px 8px', borderRadius: '10px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', color: 'rgba(201,168,76,0.7)' }}>
@@ -421,7 +373,6 @@ export default function GachaPage() {
                     </div>
                   )}
 
-                  {/* Prix */}
                   <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginBottom: '14px' }}>
                     {booster.price_coins > 0 && (
                       <span style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '10px', padding: '4px 10px', fontSize: '0.78rem', color: '#c9a84c' }}>✦ {booster.price_coins}</span>
