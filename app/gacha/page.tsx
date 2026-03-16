@@ -17,6 +17,7 @@ export default function GachaPage() {
   const [currentReveal, setCurrentReveal] = useState(-1)
   const [showSummary, setShowSummary] = useState(false)
   const [selectedBooster, setSelectedBooster] = useState<any>(null)
+  const [selectedCard, setSelectedCard] = useState<any>(null)
 
   useEffect(() => {
     async function load() {
@@ -155,6 +156,7 @@ export default function GachaPage() {
     setCurrentReveal(-1)
     setShowSummary(false)
     setSelectedBooster(null)
+    setSelectedCard(null)
   }
 
   const rarityColor = (rarity: string) => {
@@ -187,7 +189,6 @@ export default function GachaPage() {
     <main style={{ minHeight: '100vh', background: '#0a0a14', color: '#e8e0cc', fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Rajdhani:wght@400;500;600&display=swap');
-
         @keyframes cardReveal {
           0% { transform: scale(0.3) rotateY(180deg); opacity: 0; }
           50% { transform: scale(1.1) rotateY(90deg); opacity: 0.8; }
@@ -230,7 +231,12 @@ export default function GachaPage() {
           border-color: rgba(201,168,76,0.6); transform: translateY(-4px);
           box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
-        .summary-card { animation: fadeIn 0.4s ease forwards; border-radius: 8px; overflow: hidden; }
+        .summary-card {
+          animation: fadeIn 0.4s ease forwards;
+          border-radius: 8px; overflow: hidden;
+          cursor: pointer; transition: transform 0.2s;
+        }
+        .summary-card:hover { transform: translateY(-3px); }
       `}</style>
 
       {/* Topbar */}
@@ -307,12 +313,17 @@ export default function GachaPage() {
         <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.2rem', color: '#c9a84c', marginBottom: '4px' }}>Invocation terminée !</div>
-            <div style={{ fontSize: '0.82rem', color: 'rgba(232,224,204,0.5)' }}>{revealedCards.length} cartes obtenues</div>
+            <div style={{ fontSize: '0.82rem', color: 'rgba(232,224,204,0.5)' }}>{revealedCards.length} cartes obtenues · Cliquez sur une carte pour plus de détails</div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '12px', marginBottom: '24px' }}>
             {revealedCards.map((card, i) => (
-              <div key={i} className="summary-card" style={{ animationDelay: `${i * 0.08}s`, opacity: 0 }}>
+              <div
+                key={i}
+                className="summary-card"
+                style={{ animationDelay: `${i * 0.08}s`, opacity: 0 }}
+                onClick={() => setSelectedCard(card)}
+              >
                 <div style={{
                   width: '100%', aspectRatio: '0.72', background: '#141428',
                   border: `2px solid ${rarityColor(card.rarity)}`,
@@ -402,6 +413,47 @@ export default function GachaPage() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Modal carte sélectionnée */}
+      {selectedCard && (
+        <div onClick={() => setSelectedCard(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '20px' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f1e', border: `2px solid ${rarityColor(selectedCard.rarity)}`, borderRadius: '12px', padding: '24px', maxWidth: '420px', width: '100%', display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+            <div style={{ width: '160px', height: '224px', borderRadius: '8px', overflow: 'hidden', background: '#141428', flexShrink: 0, boxShadow: `0 0 24px ${rarityGlow(selectedCard.rarity)}` }}>
+              {selectedCard.image_url ? (
+                <img src={selectedCard.image_url} alt={selectedCard.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', opacity: 0.3 }}>🎴</div>
+              )}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#c9a84c', marginBottom: '6px' }}>{selectedCard.name}</div>
+              <div style={{ fontSize: '0.75rem', color: rarityColor(selectedCard.rarity), marginBottom: '4px', letterSpacing: '0.1em' }}>{selectedCard.rarity?.toUpperCase()}</div>
+              <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.6)', marginBottom: '12px' }}>{selectedCard.universe}</div>
+              {(selectedCard.atk !== null && selectedCard.atk !== undefined) && (
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                  <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem' }}>
+                    <span style={{ color: 'rgba(201,168,76,0.5)' }}>ATK </span>
+                    <span style={{ color: '#c9a84c', fontWeight: 600 }}>{selectedCard.atk}</span>
+                  </div>
+                  <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem' }}>
+                    <span style={{ color: 'rgba(201,168,76,0.5)' }}>DEF </span>
+                    <span style={{ color: '#c9a84c', fontWeight: 600 }}>{selectedCard.def}</span>
+                  </div>
+                </div>
+              )}
+              {selectedCard.description && (
+                <div style={{ fontSize: '0.78rem', color: 'rgba(232,224,204,0.6)', lineHeight: '1.6', marginBottom: '8px', borderTop: '1px solid rgba(201,168,76,0.15)', paddingTop: '10px' }}>{selectedCard.description}</div>
+              )}
+              {selectedCard.effect && (
+                <div style={{ fontSize: '0.78rem', color: 'rgba(232,224,204,0.75)', lineHeight: '1.6', padding: '8px 10px', background: 'rgba(201,168,76,0.04)', borderRadius: '4px', border: '1px solid rgba(201,168,76,0.12)' }}>{selectedCard.effect}</div>
+              )}
+              <button onClick={() => setSelectedCard(null)} style={{ marginTop: '14px', width: '100%', padding: '8px', background: 'transparent', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: 'rgba(201,168,76,0.6)', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem' }}>
+                Fermer
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </main>
