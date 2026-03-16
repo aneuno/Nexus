@@ -127,7 +127,15 @@ export default function HomePage() {
             <span style={{ fontSize: '1.4rem' }}>💠</span>
             <div>
               <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Boutique</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Boosters & cosmétiques</div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Cosmétiques</div>
+            </div>
+          </a>
+
+          <a href="/gacha" className="nav-main-btn">
+            <span style={{ fontSize: '1.4rem' }}>🌀</span>
+            <div>
+              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Void</div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Invocation de cartes</div>
             </div>
           </a>
 
@@ -156,7 +164,7 @@ export default function HomePage() {
           </a>
 
           <a href="/card-3d" className="nav-main-btn">
-            <span style={{ fontSize: '1.4rem' }}>🌀</span>
+            <span style={{ fontSize: '1.4rem' }}>✨</span>
             <div>
               <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Visu 3D</div>
               <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Aperçu holographique</div>
