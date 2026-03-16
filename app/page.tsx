@@ -131,6 +131,14 @@ export default function HomePage() {
             </div>
           </a>
 
+          <a href="/market" className="nav-main-btn">
+            <span style={{ fontSize: '1.4rem' }}>🏪</span>
+            <div>
+              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c', marginBottom: '2px' }}>Market</div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)' }}>Acheter & vendre</div>
+            </div>
+          </a>
+
           <a href="/catalogue" className="nav-main-btn">
             <span style={{ fontSize: '1.4rem' }}>📖</span>
             <div>
