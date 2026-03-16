@@ -34,7 +34,7 @@ export default function CataloguePage() {
 
       const univs = Array.from(new Set(data.map((c: any) => c.universe))).sort() as string[]
       const typs = Array.from(new Set(data.map((c: any) => c.card_type))).sort() as string[]
-      const rars = Array.from(new Set(data.map((c: any) => c.rarity))).sort() as string[]
+      const rars = Array.from(new Set(data.map((c: any) => c.rarity))).sort((a: any, b: any) => Number(a) - Number(b)) as string[]
 
         setUniverses(univs)
         setTypes(typs)
