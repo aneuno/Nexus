@@ -17,6 +17,8 @@ export default function CataloguePage() {
   const [filterRarity, setFilterRarity] = useState('all')
   const [filterUniverse, setFilterUniverse] = useState('all')
   const [universes, setUniverses] = useState<string[]>([])
+  const [types, setTypes] = useState<string[]>([])
+  const [rarities, setRarities] = useState<string[]>([])
   const [selected, setSelected] = useState<any>(null)
 
   useEffect(() => {
@@ -26,7 +28,11 @@ export default function CataloguePage() {
         setCards(data)
         setFiltered(data)
         const univs = Array.from(new Set(data.map((c: any) => c.universe))) as string[]
+        const typs = Array.from(new Set(data.map((c: any) => c.card_type))) as string[]
+        const rars = Array.from(new Set(data.map((c: any) => c.rarity))) as string[]
         setUniverses(univs)
+        setTypes(typs)
+        setRarities(rars)
       }
       setLoading(false)
     }
@@ -42,29 +48,15 @@ export default function CataloguePage() {
     setFiltered(result)
   }, [search, filterType, filterRarity, filterUniverse, cards])
 
-  const rarityColor: Record<string, string> = {
-    common: 'rgba(180,180,180,0.7)',
-    rare: '#4c99c9',
-    epic: '#9b4cc9',
-    legendary: '#c9a84c'
+  const rc = (rarity: string) => {
+    const colors: Record<string, string> = {
+      common: 'rgba(180,180,180,0.7)',
+      rare: '#4c99c9',
+      epic: '#9b4cc9',
+      legendary: '#c9a84c'
+    }
+    return colors[rarity] || 'rgba(201,168,76,0.3)'
   }
-
-  const rarityLabel: Record<string, string> = {
-    common: 'Commune',
-    rare: 'Rare',
-    epic: 'Epique',
-    legendary: 'Legendaire'
-  }
-
-  const typeLabel: Record<string, string> = {
-    monster: 'Monstre',
-    spell: 'Sort',
-    trap: 'Piege',
-    fusion: 'Fusion',
-    ritual: 'Rituel'
-  }
-
-  const rc = (rarity: string) => rarityColor[rarity] || 'rgba(201,168,76,0.3)'
 
   return (
     <main style={{ minHeight: '100vh', background: '#0a0a14', color: '#e8e0cc', fontFamily: 'sans-serif' }}>
@@ -85,18 +77,11 @@ export default function CataloguePage() {
         />
         <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ padding: '7px 12px', background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: '#e8e0cc', fontSize: '0.82rem', outline: 'none' }}>
           <option value="all">Tous types</option>
-          <option value="monster">Monstre</option>
-          <option value="spell">Sort</option>
-          <option value="trap">Piege</option>
-          <option value="fusion">Fusion</option>
-          <option value="ritual">Rituel</option>
+          {types.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
         <select value={filterRarity} onChange={e => setFilterRarity(e.target.value)} style={{ padding: '7px 12px', background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: '#e8e0cc', fontSize: '0.82rem', outline: 'none' }}>
           <option value="all">Toutes raretes</option>
-          <option value="common">Commune</option>
-          <option value="rare">Rare</option>
-          <option value="epic">Epique</option>
-          <option value="legendary">Legendaire</option>
+          {rarities.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
         <select value={filterUniverse} onChange={e => setFilterUniverse(e.target.value)} style={{ padding: '7px 12px', background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: '#e8e0cc', fontSize: '0.82rem', outline: 'none' }}>
           <option value="all">Tous univers</option>
@@ -144,36 +129,22 @@ export default function CataloguePage() {
                   )}
                 </div>
                 {selected.image_url && (
-  <a
-    href={'/card-3d?url=' + encodeURIComponent(selected.image_url)}
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '8px',
-      width: '180px',
-      padding: '10px',
-      background: 'rgba(155,76,201,0.2)',
-      border: '1px solid rgba(201,168,76,0.5)',
-      borderRadius: '6px',
-      color: '#c9a84c',
-      fontSize: '0.82rem',
-      textDecoration: 'none',
-      boxSizing: 'border-box'
-    }}
-  >
-    🌀 Voir en 3D
-  </a>
-)}
+                  
+                    href={'/card-3d?url=' + encodeURIComponent(selected.image_url)}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '180px', padding: '10px', background: 'rgba(155,76,201,0.2)', border: '1px solid rgba(201,168,76,0.5)', borderRadius: '6px', color: '#c9a84c', fontSize: '0.82rem', textDecoration: 'none', boxSizing: 'border-box' }}
+                  >
+                    🌀 Voir en 3D
+                  </a>
+                )}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: '1.1rem', color: '#c9a84c', marginBottom: '6px' }}>{selected.name}</div>
-                <div style={{ fontSize: '0.78rem', color: rc(selected.rarity), marginBottom: '12px' }}>{rarityLabel[selected.rarity] || selected.rarity}</div>
+                <div style={{ fontSize: '0.78rem', color: rc(selected.rarity), marginBottom: '12px' }}>{selected.rarity}</div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '14px' }}>
-                  <span style={{ fontSize: '0.7rem', padding: '3px 10px', borderRadius: '10px', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', color: '#c9a84c' }}>{typeLabel[selected.card_type] || selected.card_type}</span>
+                  <span style={{ fontSize: '0.7rem', padding: '3px 10px', borderRadius: '10px', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', color: '#c9a84c' }}>{selected.card_type}</span>
                   <span style={{ fontSize: '0.7rem', padding: '3px 10px', borderRadius: '10px', background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)', color: 'rgba(201,168,76,0.7)' }}>{selected.universe}</span>
                 </div>
-                {(selected.card_type === 'monster' || selected.card_type === 'fusion' || selected.card_type === 'ritual') && (
+                {(selected.atk !== null && selected.atk !== undefined) && (
                   <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
                     <div style={{ background: '#141428', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', padding: '6px 14px' }}>
                       <span style={{ color: 'rgba(201,168,76,0.5)', fontSize: '0.7rem' }}>ATK </span>
