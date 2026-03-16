@@ -252,11 +252,10 @@ export default function Card3D() {
         <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.4)', marginBottom: '4px', textAlign: 'center', fontFamily: 'Rajdhani, sans-serif' }}>{lightIntensity.toFixed(1)}</div>
       </div>
 
-      {/* Panneau droit — navigation */}
-      <div style={{ position: 'fixed', right: '20px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(10,10,20,0.85)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '16px', zIndex: 10, backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <a href="/card-maker" style={{ textAlign: 'center', fontSize: '0.75rem', color: 'rgba(201,168,76,0.4)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif' }}>→ Card Maker</a>
-        <a href="/" style={{ textAlign: 'center', fontSize: '0.75rem', color: 'rgba(201,168,76,0.4)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif' }}>← Menu</a>
-      </div>
+      {/* Bouton menu en bas à gauche */}
+      <a href="/" style={{ position: 'fixed', bottom: '24px', left: '24px', background: 'rgba(10,10,20,0.85)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '10px 16px', fontSize: '0.78rem', color: 'rgba(201,168,76,0.5)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif', letterSpacing: '0.1em', zIndex: 10, backdropFilter: 'blur(8px)' }}>
+        ← Menu
+      </a>
     </main>
   )
 }
