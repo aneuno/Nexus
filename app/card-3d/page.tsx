@@ -41,7 +41,7 @@ export default function Card3D() {
 
       const scene = new THREE.Scene()
       const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
-      camera.position.z = 3.5
+      camera.position.z = 6.5
 
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
       scene.add(ambientLight)
