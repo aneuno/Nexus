@@ -534,9 +534,9 @@ export default function GamePage({ params }: { params: { id: string } }) {
           </div>
 
           {/* TERRAIN OPP Magie/Piège */}
-          <div style={{ display: 'flex', gap: '50px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <GraveyardZone player={opp} />
-            {gameState.spellZones[opp].map((_, i) => <SpellZone key={i} player={opp} zone={i} />)}
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <FieldZone label="TERRAIN" />
           </div>
 
