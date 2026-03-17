@@ -402,20 +402,20 @@ export default function GamePage({ params }: { params: { id: string } }) {
       >
         {fc ? (
           fc.position === 'SET' ? (
-            <div style={{ width: '100px', height: '72px', position: 'absolute', borderRadius: '4px', overflow: 'hidden' }}>
-  {cardBackUrl
-    ? <img src={cardBackUrl} alt="dos" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-    : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #1a1a35, #0f0f20)', border: '1px solid rgba(201,168,76,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontSize: '1.4rem', opacity: 0.4 }}>🎴</span></div>
-  }
-</div>
-          ) : fc.position === 'DEF' ? (
-            <div style={{ width: '100px', height: '72px', position: 'absolute', borderRadius: '4px', overflow: 'hidden' }}>
-  <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.75)', padding: '1px 3px', display: 'flex', justifyContent: 'space-between' }}>
-    <span style={{ fontSize: '0.5rem', color: '#4c99c9' }}>DEF</span>
-    <span style={{ fontSize: '0.5rem', color: '#e8e0cc' }}>{fc.card.def}</span>
+  <div style={{ width: '100px', height: '72px', position: 'absolute', borderRadius: '4px', overflow: 'hidden' }}>
+    {cardBackUrl
+      ? <img src={cardBackUrl} alt="dos" style={{ width: '72px', height: '100px', objectFit: 'cover', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(90deg)' }} />
+      : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #1a1a35, #0f0f20)', border: '1px solid rgba(201,168,76,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontSize: '1.4rem', opacity: 0.4 }}>🎴</span></div>
+    }
   </div>
-</div>
+          ) : fc.position === 'DEF' ? (
+  <div style={{ width: '100px', height: '72px', position: 'absolute', borderRadius: '4px', overflow: 'hidden' }}>
+    <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '72px', height: '100px', objectFit: 'cover', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(90deg)' }} />
+    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.75)', padding: '1px 3px', display: 'flex', justifyContent: 'space-between' }}>
+      <span style={{ fontSize: '0.5rem', color: '#4c99c9' }}>DEF</span>
+      <span style={{ fontSize: '0.5rem', color: '#e8e0cc' }}>{fc.card.def}</span>
+    </div>
+  </div>
           ) : (
             <div style={{ width: '72px', height: '100px', flexShrink: 0, position: 'relative', overflow: 'hidden', borderRadius: '4px' }}>
               <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: gameState.hasAttackedThisTurn[zone] && isActive ? 0.5 : 1 }} />
