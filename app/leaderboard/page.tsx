@@ -44,11 +44,10 @@ export default function LeaderboardPage() {
     const tabObj = tabs.find(t => t.id === tab)
     if (!tabObj) return
 
-    if (tab === 'cards') {
-      const { data } = await supabase
-        .from('player_cards')
-        .select('player_id, quantity')
+    let result: any[] = []
 
+    if (tab === 'cards') {
+      const { data } = await supabase.from('player_cards').select('player_id, quantity')
       if (!data) { setLoading(false); return }
 
       const countMap: Record<string, number> = {}
@@ -56,44 +55,49 @@ export default function LeaderboardPage() {
         countMap[row.player_id] = (countMap[row.player_id] || 0) + row.quantity
       }
 
-      const sorted = Object.entries(countMap)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 50)
-
+      const sorted = Object.entries(countMap).sort(([, a], [, b]) => b - a).slice(0, 50)
       const playerIds = sorted.map(([id]) => id)
+
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, username, avatar, rank, avatar_id, avatars(image_url)')
+        .select('id, username, avatar, rank, avatar_id')
         .in('id', playerIds)
 
-      const result = sorted.map(([id, count], index) => {
-        const profile = profiles?.find(p => p.id === id)
-        return { ...profile, _value: count, _rank: index + 1 }
-      })
+      const avatarIds = profiles?.map(p => p.avatar_id).filter(Boolean) || []
+      const { data: avatars } = avatarIds.length > 0
+        ? await supabase.from('avatars').select('id, image_url').in('id', avatarIds)
+        : { data: [] }
 
-      setPlayers(result)
-      const myIndex = result.findIndex(p => p.id === userId)
-      setMyRank(myIndex >= 0 ? myIndex + 1 : null)
+      result = sorted.map(([id, count], index) => {
+        const profile = profiles?.find(p => p.id === id)
+        const avatar = avatars?.find((a: any) => a.id === profile?.avatar_id)
+        return { ...profile, _value: count, _rank: index + 1, avatars: avatar || null }
+      })
     } else {
       const { data } = await supabase
         .from('profiles')
-        .select('id, username, avatar, rank, rank_points, wins, nexus_coins, crystals, avatar_id, avatars(image_url)')
+        .select('id, username, avatar, rank, rank_points, wins, nexus_coins, crystals, avatar_id')
         .order(tabObj.field, { ascending: false })
         .limit(50)
 
       if (!data) { setLoading(false); return }
 
-      const result = data.map((p, i) => ({
+      const avatarIds = data.map(p => p.avatar_id).filter(Boolean)
+      const { data: avatars } = avatarIds.length > 0
+        ? await supabase.from('avatars').select('id, image_url').in('id', avatarIds)
+        : { data: [] }
+
+      result = data.map((p, i) => ({
         ...p,
         _value: p[tabObj.field],
-        _rank: i + 1
+        _rank: i + 1,
+        avatars: avatars?.find((a: any) => a.id === p.avatar_id) || null
       }))
-
-      setPlayers(result)
-      const myIndex = result.findIndex(p => p.id === userId)
-      setMyRank(myIndex >= 0 ? myIndex + 1 : null)
     }
 
+    setPlayers(result)
+    const myIndex = result.findIndex(p => p.id === userId)
+    setMyRank(myIndex >= 0 ? myIndex + 1 : null)
     setLoading(false)
   }
 
@@ -163,37 +167,43 @@ export default function LeaderboardPage() {
         <div style={{ padding: '24px 20px 0', display: 'flex', justifyContent: 'center', gap: '12px', alignItems: 'flex-end' }}>
           {/* 2ème */}
           <div style={{ textAlign: 'center', flex: 1, maxWidth: '140px' }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 8px', border: '2px solid #C0C0C0', background: '#141428', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem' }}>
-              {players[1]?.avatars?.image_url ? <img src={players[1].avatars.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : players[1]?.avatar || '🐉'}
-            </div>
-            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: '#C0C0C0', marginBottom: '2px' }}>{players[1]?.username}</div>
-            <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)', marginBottom: '6px' }}>{valueLabel(players[1]?._value)}</div>
+            <a href={`/profile/${players[1]?.id}`} style={{ textDecoration: 'none' }}>
+              <div style={{ width: '56px', height: '56px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 8px', border: '2px solid #C0C0C0', background: '#141428', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem' }}>
+                {players[1]?.avatars?.image_url ? <img src={players[1].avatars.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : players[1]?.avatar || '🐉'}
+              </div>
+              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: '#C0C0C0', marginBottom: '2px' }}>{players[1]?.username}</div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)', marginBottom: '6px' }}>{valueLabel(players[1]?._value)}</div>
+            </a>
             <div style={{ background: 'rgba(192,192,192,0.1)', border: '1px solid rgba(192,192,192,0.3)', borderRadius: '6px 6px 0 0', padding: '10px 0', fontSize: '1.4rem' }}>🥈</div>
           </div>
 
           {/* 1er */}
           <div style={{ textAlign: 'center', flex: 1, maxWidth: '140px' }}>
-            <div style={{ width: '68px', height: '68px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 8px', border: '3px solid #FFD700', background: '#141428', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', boxShadow: '0 0 20px rgba(255,215,0,0.3)' }}>
-              {players[0]?.avatars?.image_url ? <img src={players[0].avatars.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : players[0]?.avatar || '🐉'}
-            </div>
-            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#FFD700', marginBottom: '2px' }}>{players[0]?.username}</div>
-            <div style={{ fontSize: '0.72rem', color: 'rgba(232,224,204,0.5)', marginBottom: '6px' }}>{valueLabel(players[0]?._value)}</div>
+            <a href={`/profile/${players[0]?.id}`} style={{ textDecoration: 'none' }}>
+              <div style={{ width: '68px', height: '68px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 8px', border: '3px solid #FFD700', background: '#141428', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', boxShadow: '0 0 20px rgba(255,215,0,0.3)' }}>
+                {players[0]?.avatars?.image_url ? <img src={players[0].avatars.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : players[0]?.avatar || '🐉'}
+              </div>
+              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#FFD700', marginBottom: '2px' }}>{players[0]?.username}</div>
+              <div style={{ fontSize: '0.72rem', color: 'rgba(232,224,204,0.5)', marginBottom: '6px' }}>{valueLabel(players[0]?._value)}</div>
+            </a>
             <div style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.4)', borderRadius: '6px 6px 0 0', padding: '14px 0', fontSize: '1.6rem' }}>👑</div>
           </div>
 
           {/* 3ème */}
           <div style={{ textAlign: 'center', flex: 1, maxWidth: '140px' }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 8px', border: '2px solid #CD7F32', background: '#141428', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem' }}>
-              {players[2]?.avatars?.image_url ? <img src={players[2].avatars.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : players[2]?.avatar || '🐉'}
-            </div>
-            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: '#CD7F32', marginBottom: '2px' }}>{players[2]?.username}</div>
-            <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)', marginBottom: '6px' }}>{valueLabel(players[2]?._value)}</div>
+            <a href={`/profile/${players[2]?.id}`} style={{ textDecoration: 'none' }}>
+              <div style={{ width: '56px', height: '56px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 8px', border: '2px solid #CD7F32', background: '#141428', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem' }}>
+                {players[2]?.avatars?.image_url ? <img src={players[2].avatars.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : players[2]?.avatar || '🐉'}
+              </div>
+              <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: '#CD7F32', marginBottom: '2px' }}>{players[2]?.username}</div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)', marginBottom: '6px' }}>{valueLabel(players[2]?._value)}</div>
+            </a>
             <div style={{ background: 'rgba(205,127,50,0.1)', border: '1px solid rgba(205,127,50,0.3)', borderRadius: '6px 6px 0 0', padding: '8px 0', fontSize: '1.4rem' }}>🥉</div>
           </div>
         </div>
       )}
 
-      {/* Liste */}
+      {/* Liste 4-50 */}
       <div style={{ flex: 1, padding: '16px 20px', overflowY: 'auto', maxWidth: '700px', width: '100%', margin: '0 auto' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(201,168,76,0.4)' }}>Chargement...</div>
