@@ -411,18 +411,18 @@ export default function GamePage({ params }: { params: { id: string } }) {
           ) : fc.position === 'DEF' ? (
   <div style={{ width: '100px', height: '72px', position: 'absolute', borderRadius: '4px', overflow: 'hidden' }}>
     <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '72px', height: '100px', objectFit: 'cover', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(90deg)' }} />
-    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.75)', padding: '1px 3px', display: 'flex', justifyContent: 'space-between' }}>
-      <span style={{ fontSize: '0.5rem', color: '#4c99c9' }}>DEF</span>
-      <span style={{ fontSize: '0.5rem', color: '#e8e0cc' }}>{fc.card.def}</span>
-    </div>
+    <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(6,6,15,0.92)', border: '1px solid rgba(232,76,76,0.5)', borderRadius: '4px', padding: '2px 8px', display: 'flex', gap: '6px', alignItems: 'center', whiteSpace: 'nowrap' }}>
+  <span style={{ fontSize: '0.65rem', color: '#e84c4c', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>ATK</span>
+  <span style={{ fontSize: '0.72rem', color: '#e8e0cc', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>{fc.card.atk}</span>
+</div>
   </div>
           ) : (
             <div style={{ width: '72px', height: '100px', flexShrink: 0, position: 'relative', overflow: 'hidden', borderRadius: '4px' }}>
               <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: gameState.hasAttackedThisTurn[zone] && isActive ? 0.5 : 1 }} />
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.8)', padding: '2px 4px', display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.5rem', color: '#e84c4c' }}>ATK</span>
-                <span style={{ fontSize: '0.5rem', color: '#e8e0cc' }}>{fc.card.atk}</span>
-              </div>
+              <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(6,6,15,0.92)', border: '1px solid rgba(76,153,201,0.5)', borderRadius: '4px', padding: '2px 8px', display: 'flex', gap: '6px', alignItems: 'center', whiteSpace: 'nowrap' }}>
+  <span style={{ fontSize: '0.65rem', color: '#4c99c9', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>DEF</span>
+  <span style={{ fontSize: '0.72rem', color: '#e8e0cc', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>{fc.card.def}</span>
+</div>
               {gameState.hasAttackedThisTurn[zone] && isActive && (
                 <div style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(0,0,0,0.7)', borderRadius: '3px', padding: '1px 3px', fontSize: '0.45rem', color: 'rgba(232,224,204,0.5)' }}>ATQ✓</div>
               )}
