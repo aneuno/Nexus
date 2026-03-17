@@ -534,14 +534,14 @@ export default function GamePage({ params }: { params: { id: string } }) {
           </div>
 
           {/* TERRAIN OPP Magie/Piège */}
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '50px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <GraveyardZone player={opp} />
             {gameState.spellZones[opp].map((_, i) => <SpellZone key={i} player={opp} zone={i} />)}
             <FieldZone label="TERRAIN" />
           </div>
 
           {/* TERRAIN OPP Monstres — ── CHANGEMENT 2 : gap de 50px ── */}
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '50px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <DeckZone player={opp} />
             {gameState.monsterZones[opp].map((_, i) => <MonsterZone key={i} player={opp} zone={i} />)}
             <div style={{ width: '72px', flexShrink: 0 }} />
