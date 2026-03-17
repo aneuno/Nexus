@@ -91,6 +91,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
   const [hoveredCard, setHoveredCard] = useState<CardData | null>(null)
   const [flashMsg, setFlashMsg] = useState<string | null>(null)
   const [cardBackUrl, setCardBackUrl] = useState<string>('')
+  const [myRole, setMyRole] = useState<0 | 1>(0)
 
   useEffect(() => {
     async function init() {
@@ -98,6 +99,10 @@ export default function GamePage({ params }: { params: { id: string } }) {
       if (!session) { window.location.href = '/login'; return }
 
       const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
+      if (params.id !== 'test') {
+        const { data: roomCheck } = await supabase.from('game_rooms').select('host_id, guest_id').eq('id', params.id).single()
+        if (roomCheck) setMyRole(roomCheck.host_id === session.user.id ? 0 : 1)
+      }
       if (prof) {
         const { data: deck } = await supabase
           .from('player_decks')
@@ -123,6 +128,23 @@ export default function GamePage({ params }: { params: { id: string } }) {
       setLoading(false)
     }
     init()
+
+    if (params.id !== 'test') {
+      const channel = supabase
+        .channel(`game_${params.id}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'game_rooms',
+          filter: `id=eq.${params.id}`
+        }, (payload: any) => {
+          if (payload.new.game_state) {
+            setGameState(payload.new.game_state)
+          }
+        })
+        .subscribe()
+      return () => { supabase.removeChannel(channel) }
+    }
   }, [])
 
   async function loadTestCards(): Promise<CardData[]> {
@@ -173,6 +195,11 @@ export default function GamePage({ params }: { params: { id: string } }) {
   }
 
   function showMsg(msg: string) { setFlashMsg(msg); setTimeout(() => setFlashMsg(null), 2500) }
+
+  async function syncGameState(state: GameState) {
+    if (params.id === 'test') return
+    await supabase.from('game_rooms').update({ game_state: state }).eq('id', params.id)
+  }
 
   function doNextPhase(state: GameState): GameState {
     if (state.winner !== null) return state
@@ -336,7 +363,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
       if (newCollected.length >= needed) {
         const targetZone = gameState.pendingSummonZone ?? gameState.monsterZones[p].findIndex((f, i) => f === null && !newCollected.includes(i))
         if (targetZone === -1) { showMsg('Aucune zone libre !'); return }
-        setGameState(prev => prev ? doSummon(prev, prev.selectedHandCard!, targetZone, 'ATK', newCollected) : prev)
+        setGameState(prev => { if (!prev) return prev; const next = doSummon(prev, prev.selectedHandCard!, targetZone, 'ATK', newCollected); syncGameState(next); return next })
       } else {
         setGameState(prev => prev ? { ...prev, pendingTribute: { ...prev.pendingTribute!, collected: newCollected } } : prev)
       }
@@ -344,11 +371,11 @@ export default function GamePage({ params }: { params: { id: string } }) {
     }
 
     if (gameState.attackingCard && player === opp) {
-      setGameState(prev => prev ? doAttack(prev, prev.attackingCard!.zone, zone) : prev); return
+      setGameState(prev => { if (!prev) return prev; const next = doAttack(prev, prev.attackingCard!.zone, zone); syncGameState(next); return next }); return
     }
 
     if (gameState.selectedHandCard !== null && player === p) {
-      if (gameState.monsterZones[p][zone]) { setGameState(prev => prev ? doChangePosition(prev, zone) : prev); return }
+      if (gameState.monsterZones[p][zone]) { setGameState(prev => { if (!prev) return prev; const next = doChangePosition(prev, zone); syncGameState(next); return next }); return }
       setGameState(prev => prev ? { ...prev, pendingSummonZone: zone, showSummonModal: { handIdx: prev.selectedHandCard! } } : prev); return
     }
 
@@ -363,7 +390,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
     const { zone } = gameState.selectedFieldCard
     const p = gameState.activePlayer, opp = p === 0 ? 1 : 0 as 0 | 1
     const oppHas = gameState.monsterZones[opp].some(f => f !== null)
-    if (!oppHas) { setGameState(prev => prev ? doAttack(prev, zone, 'direct') : prev); return }
+    if (!oppHas) { setGameState(prev => { if (!prev) return prev; const next = doAttack(prev, zone, 'direct'); syncGameState(next); return next }); return }
     setGameState(prev => prev ? { ...prev, attackingCard: { zone }, selectedFieldCard: null } : prev)
     showMsg('Cliquez sur le monstre adverse')
   }
@@ -501,9 +528,9 @@ export default function GamePage({ params }: { params: { id: string } }) {
               Niv.{gameState.hands[p][gameState.showSummonModal.handIdx]?.level} · ATK {gameState.hands[p][gameState.showSummonModal.handIdx]?.atk} / DEF {gameState.hands[p][gameState.showSummonModal.handIdx]?.def}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button onClick={() => { const { handIdx } = gameState.showSummonModal!; setGameState(prev => prev ? tryPlaceCard(prev, handIdx, prev.pendingSummonZone!, 'ATK') : prev) }} style={{ padding: '12px', background: 'rgba(232,76,76,0.1)', border: '1px solid rgba(232,76,76,0.4)', borderRadius: '6px', color: '#e84c4c', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', cursor: 'pointer' }}>⚔️ Invoquer en ATK</button>
-              <button onClick={() => { const { handIdx } = gameState.showSummonModal!; setGameState(prev => prev ? tryPlaceCard(prev, handIdx, prev.pendingSummonZone!, 'DEF') : prev) }} style={{ padding: '12px', background: 'rgba(76,153,201,0.1)', border: '1px solid rgba(76,153,201,0.4)', borderRadius: '6px', color: '#4c99c9', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', cursor: 'pointer' }}>🛡️ Invoquer en DEF</button>
-              <button onClick={() => { const { handIdx } = gameState.showSummonModal!; setGameState(prev => prev ? tryPlaceCard(prev, handIdx, prev.pendingSummonZone!, 'SET') : prev) }} style={{ padding: '12px', background: 'rgba(155,76,201,0.1)', border: '1px solid rgba(155,76,201,0.4)', borderRadius: '6px', color: '#9b4cc9', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', cursor: 'pointer' }}>🃏 Poser face cachée</button>
+              <button onClick={() => { const { handIdx } = gameState.showSummonModal!; setGameState(prev => { if (!prev) return prev; const next = tryPlaceCard(prev, handIdx, prev.pendingSummonZone!, 'ATK'); syncGameState(next); return next }) }} style={{ padding: '12px', background: 'rgba(232,76,76,0.1)', border: '1px solid rgba(232,76,76,0.4)', borderRadius: '6px', color: '#e84c4c', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', cursor: 'pointer' }}>⚔️ Invoquer en ATK</button>
+              <button onClick={() => { const { handIdx } = gameState.showSummonModal!; setGameState(prev => { if (!prev) return prev; const next = tryPlaceCard(prev, handIdx, prev.pendingSummonZone!, 'DEF'); syncGameState(next); return next }) }} style={{ padding: '12px', background: 'rgba(76,153,201,0.1)', border: '1px solid rgba(76,153,201,0.4)', borderRadius: '6px', color: '#4c99c9', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', cursor: 'pointer' }}>🛡️ Invoquer en DEF</button>
+              <button onClick={() => { const { handIdx } = gameState.showSummonModal!; setGameState(prev => { if (!prev) return prev; const next = tryPlaceCard(prev, handIdx, prev.pendingSummonZone!, 'SET'); syncGameState(next); return next }) }} style={{ padding: '12px', background: 'rgba(155,76,201,0.1)', border: '1px solid rgba(155,76,201,0.4)', borderRadius: '6px', color: '#9b4cc9', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', cursor: 'pointer' }}>🃏 Poser face cachée</button>
               <button onClick={() => setGameState(prev => prev ? { ...prev, showSummonModal: null, pendingSummonZone: null, selectedHandCard: null } : prev)} style={{ padding: '8px', background: 'transparent', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '6px', color: 'rgba(201,168,76,0.5)', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem', cursor: 'pointer' }}>Annuler</button>
             </div>
           </div>
@@ -515,7 +542,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
         <div style={{ flex: 1 }} />
         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: phaseColor(gameState.phase), border: `1px solid ${phaseColor(gameState.phase)}50`, borderRadius: '4px', padding: '2px 10px' }}>{phaseLabel(gameState.phase)}</div>
         <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.5)', fontFamily: 'Rajdhani, sans-serif' }}>Tour {gameState.turn} · J{p + 1}</div>
-        <button onClick={() => setGameState(prev => prev ? doNextPhase(prev) : prev)} style={{ padding: '5px 14px', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: '#c9a84c', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', cursor: 'pointer' }}>Phase suivante →</button>
+        <button onClick={() => setGameState(prev => { if (!prev) return prev; const next = doNextPhase(prev); syncGameState(next); return next })} style={{ padding: '5px 14px', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: '#c9a84c', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', cursor: 'pointer' }}>Phase suivante →</button>
         <button onClick={() => window.location.href = '/play'} style={{ padding: '5px 12px', background: 'transparent', border: '1px solid rgba(201,76,76,0.25)', borderRadius: '4px', color: 'rgba(201,76,76,0.5)', fontSize: '0.72rem', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif' }}>Abandonner</button>
       </div>
 
@@ -578,7 +605,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
             {gameState.selectedFieldCard && !gameState.pendingTribute && (
               <>
                 {gameState.phase === 'BATTLE' && <button onClick={handleDeclareAttack} className="action-btn" style={{ background: 'rgba(232,76,76,0.1)', borderColor: 'rgba(232,76,76,0.4)', color: '#e84c4c' }}>⚔️ Attaquer</button>}
-                {(gameState.phase === 'MAIN1' || gameState.phase === 'MAIN2') && <button onClick={() => setGameState(prev => prev ? doChangePosition(prev, prev.selectedFieldCard!.zone) : prev)} className="action-btn" style={{ background: 'rgba(76,153,201,0.1)', borderColor: 'rgba(76,153,201,0.4)', color: '#4c99c9' }}>🔄 Position</button>}
+                {(gameState.phase === 'MAIN1' || gameState.phase === 'MAIN2') && <button onClick={() => setGameState(prev => { if (!prev) return prev; const next = doChangePosition(prev, prev.selectedFieldCard!.zone); syncGameState(next); return next })} className="action-btn" style={{ background: 'rgba(76,153,201,0.1)', borderColor: 'rgba(76,153,201,0.4)', color: '#4c99c9' }}>🔄 Position</button>}
                 <button onClick={() => setGameState(prev => prev ? { ...prev, selectedFieldCard: null, attackingCard: null } : prev)} className="action-btn" style={{ background: 'transparent', borderColor: 'rgba(201,168,76,0.2)', color: 'rgba(201,168,76,0.4)' }}>Annuler</button>
               </>
             )}
