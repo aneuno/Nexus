@@ -31,57 +31,102 @@ export default function FriendsPage() {
   }, [])
 
   async function loadFriends(userId: string) {
-    // Amis acceptés
     const { data: f1 } = await supabase
       .from('friends')
-      .select('*, profiles!friends_receiver_id_fkey(id, username, avatar, rank, avatar_id, avatars(image_url))')
+      .select('*, profiles!friends_receiver_id_fkey(id, username, avatar, rank, avatar_id)')
       .eq('sender_id', userId)
       .eq('status', 'accepted')
 
     const { data: f2 } = await supabase
       .from('friends')
-      .select('*, profiles!friends_sender_id_fkey(id, username, avatar, rank, avatar_id, avatars(image_url))')
+      .select('*, profiles!friends_sender_id_fkey(id, username, avatar, rank, avatar_id)')
       .eq('receiver_id', userId)
       .eq('status', 'accepted')
 
-    const allFriends = [
-      ...(f1 || []).map((f: any) => ({ ...f, friend: f.profiles })),
-      ...(f2 || []).map((f: any) => ({ ...f, friend: f.profiles })),
-    ]
-    setFriends(allFriends)
-
-    // Demandes reçues
     const { data: recv } = await supabase
       .from('friends')
-      .select('*, profiles!friends_sender_id_fkey(id, username, avatar, rank, avatars(image_url))')
+      .select('*, profiles!friends_sender_id_fkey(id, username, avatar, rank, avatar_id)')
       .eq('receiver_id', userId)
       .eq('status', 'pending')
-    setPending((recv || []).map((f: any) => ({ ...f, friend: f.profiles })))
 
-    // Demandes envoyées
     const { data: sent_ } = await supabase
       .from('friends')
-      .select('*, profiles!friends_receiver_id_fkey(id, username, avatar, rank, avatars(image_url))')
+      .select('*, profiles!friends_receiver_id_fkey(id, username, avatar, rank, avatar_id)')
       .eq('sender_id', userId)
       .eq('status', 'pending')
-    setSent((sent_ || []).map((f: any) => ({ ...f, friend: f.profiles })))
+
+    // Charger les avatars
+    const allProfiles = [
+      ...(f1 || []).map((f: any) => f.profiles),
+      ...(f2 || []).map((f: any) => f.profiles),
+      ...(recv || []).map((f: any) => f.profiles),
+      ...(sent_ || []).map((f: any) => f.profiles),
+    ].filter(Boolean)
+
+    const avatarIds = allProfiles.map(p => p.avatar_id).filter(Boolean)
+    const { data: avatars } = avatarIds.length > 0
+      ? await supabase.from('avatars').select('id, image_url').in('id', avatarIds)
+      : { data: [] }
+
+    const withAvatar = (profile: any) => ({
+      ...profile,
+      avatars: avatars?.find((a: any) => a.id === profile?.avatar_id) || null
+    })
+
+    setFriends([
+      ...(f1 || []).map((f: any) => ({ ...f, friend: withAvatar(f.profiles) })),
+      ...(f2 || []).map((f: any) => ({ ...f, friend: withAvatar(f.profiles) })),
+    ])
+    setPending((recv || []).map((f: any) => ({ ...f, friend: withAvatar(f.profiles) })))
+    setSent((sent_ || []).map((f: any) => ({ ...f, friend: withAvatar(f.profiles) })))
   }
 
   async function searchPlayers(query: string) {
     if (!query.trim()) { setSearchResults([]); return }
     const { data } = await supabase
       .from('profiles')
-      .select('id, username, avatar, rank, avatars(image_url)')
+      .select('id, username, avatar, rank, avatar_id')
       .ilike('username', `%${query}%`)
       .neq('id', myId)
       .limit(10)
-    setSearchResults(data || [])
+
+    if (!data) { setSearchResults([]); return }
+
+    const avatarIds = data.map(p => p.avatar_id).filter(Boolean)
+    const { data: avatars } = avatarIds.length > 0
+      ? await supabase.from('avatars').select('id, image_url').in('id', avatarIds)
+      : { data: [] }
+
+    setSearchResults(data.map(p => ({
+      ...p,
+      avatars: avatars?.find((a: any) => a.id === p.avatar_id) || null
+    })))
   }
 
   async function sendRequest(receiverId: string) {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
-    await supabase.from('friends').insert({ sender_id: session.user.id, receiver_id: receiverId, status: 'pending' })
+
+    await supabase.from('friends').insert({
+      sender_id: session.user.id,
+      receiver_id: receiverId,
+      status: 'pending'
+    })
+
+    const { data: me } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', session.user.id)
+      .single()
+
+    await supabase.from('notifications').insert({
+      player_id: receiverId,
+      type: 'friend_request',
+      title: "Demande d'ami",
+      message: `${me?.username} vous a envoyé une demande d'ami.`,
+      is_read: false
+    })
+
     setMessage({ type: 'success', text: 'Demande envoyée !' })
     setTimeout(() => setMessage(null), 3000)
     await loadFriends(session.user.id)
@@ -89,11 +134,29 @@ export default function FriendsPage() {
     setSearch('')
   }
 
-  async function acceptRequest(friendRowId: string) {
+  async function acceptRequest(friendRowId: string, senderId: string) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+
     await supabase.from('friends').update({ status: 'accepted' }).eq('id', friendRowId)
+
+    const { data: me } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', session.user.id)
+      .single()
+
+    await supabase.from('notifications').insert({
+      player_id: senderId,
+      type: 'friend_accepted',
+      title: 'Demande acceptée',
+      message: `${me?.username} a accepté votre demande d'ami.`,
+      is_read: false
+    })
+
     setMessage({ type: 'success', text: 'Ami ajouté !' })
     setTimeout(() => setMessage(null), 3000)
-    if (myId) await loadFriends(myId)
+    await loadFriends(session.user.id)
   }
 
   async function declineRequest(friendRowId: string) {
@@ -117,24 +180,20 @@ export default function FriendsPage() {
     { id: 'search', label: '🔍 Rechercher' },
   ]
 
-  const PlayerCard = ({ player, friendRowId, actions }: { player: any, friendRowId?: string, actions: React.ReactNode }) => (
+  const PlayerCard = ({ player, actions }: { player: any, actions: React.ReactNode }) => (
     <div style={{ background: '#0f0f1e', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
       <a href={`/profile/${player.id}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, textDecoration: 'none' }}>
         <div style={{ width: '44px', height: '44px', borderRadius: '50%', overflow: 'hidden', background: '#141428', border: '2px solid rgba(201,168,76,0.3)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
           {player.avatars?.image_url ? (
             <img src={player.avatars.image_url} alt={player.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            player.avatar || '🐉'
-          )}
+          ) : player.avatar || '🐉'}
         </div>
         <div>
           <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#c9a84c' }}>{player.username}</div>
           <div style={{ fontSize: '0.7rem', color: 'rgba(201,168,76,0.4)' }}>★ {player.rank}</div>
         </div>
       </a>
-      <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-        {actions}
-      </div>
+      <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>{actions}</div>
     </div>
   )
 
@@ -165,14 +224,12 @@ export default function FriendsPage() {
         }
       `}</style>
 
-      {/* Topbar */}
       <div style={{ background: '#0a0a14', borderBottom: '1px solid rgba(201,168,76,0.2)', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
         <button onClick={() => window.history.back()} style={{ fontSize: '0.8rem', color: 'rgba(201,168,76,0.5)', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif' }}>← Retour</button>
         <div style={{ width: '1px', height: '16px', background: 'rgba(201,168,76,0.2)' }} />
         <span style={{ fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '1rem', letterSpacing: '0.15em' }}>Amis</span>
       </div>
 
-      {/* Tabs */}
       <div style={{ background: 'rgba(10,10,20,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', padding: '0 20px', display: 'flex', overflowX: 'auto', flexShrink: 0 }}>
         {tabs.map(tab => (
           <button key={tab.id} className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`} onClick={() => setActiveTab(tab.id)}>
@@ -183,7 +240,6 @@ export default function FriendsPage() {
 
       <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
 
-        {/* Amis */}
         {activeTab === 'friends' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {friends.length === 0 ? (
@@ -193,26 +249,16 @@ export default function FriendsPage() {
                 <div style={{ fontSize: '0.75rem', marginTop: '0.5rem', color: 'rgba(201,168,76,0.3)' }}>Recherchez des joueurs pour les ajouter</div>
               </div>
             ) : friends.map(f => (
-              <PlayerCard
-                key={f.id}
-                player={f.friend}
-                friendRowId={f.id}
-                actions={
-                  <>
-                    <button className="action-btn" style={{ background: 'rgba(155,76,201,0.2)', color: '#9b4cc9', border: '1px solid rgba(155,76,201,0.3)' }}>
-                      ⚔️ Duel
-                    </button>
-                    <button className="action-btn" onClick={() => removeFriend(f.id)} style={{ background: 'transparent', color: 'rgba(201,76,76,0.6)', border: '1px solid rgba(201,76,76,0.2)' }}>
-                      Retirer
-                    </button>
-                  </>
-                }
-              />
+              <PlayerCard key={f.id} player={f.friend} actions={
+                <>
+                  <button className="action-btn" style={{ background: 'rgba(155,76,201,0.2)', color: '#9b4cc9', border: '1px solid rgba(155,76,201,0.3)' }}>⚔️ Duel</button>
+                  <button className="action-btn" onClick={() => removeFriend(f.id)} style={{ background: 'transparent', color: 'rgba(201,76,76,0.6)', border: '1px solid rgba(201,76,76,0.2)' }}>Retirer</button>
+                </>
+              } />
             ))}
           </div>
         )}
 
-        {/* Demandes reçues */}
         {activeTab === 'pending' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {pending.length === 0 ? (
@@ -221,25 +267,16 @@ export default function FriendsPage() {
                 <div style={{ fontFamily: 'Cinzel, serif' }}>Aucune demande reçue</div>
               </div>
             ) : pending.map(f => (
-              <PlayerCard
-                key={f.id}
-                player={f.friend}
-                actions={
-                  <>
-                    <button className="action-btn" onClick={() => acceptRequest(f.id)} style={{ background: 'linear-gradient(135deg, #1e8a6a, #4cc9a8)', color: '#0a0a14' }}>
-                      Accepter
-                    </button>
-                    <button className="action-btn" onClick={() => declineRequest(f.id)} style={{ background: 'transparent', color: 'rgba(201,76,76,0.6)', border: '1px solid rgba(201,76,76,0.2)' }}>
-                      Refuser
-                    </button>
-                  </>
-                }
-              />
+              <PlayerCard key={f.id} player={f.friend} actions={
+                <>
+                  <button className="action-btn" onClick={() => acceptRequest(f.id, f.friend.id)} style={{ background: 'linear-gradient(135deg, #1e8a6a, #4cc9a8)', color: '#0a0a14' }}>Accepter</button>
+                  <button className="action-btn" onClick={() => declineRequest(f.id)} style={{ background: 'transparent', color: 'rgba(201,76,76,0.6)', border: '1px solid rgba(201,76,76,0.2)' }}>Refuser</button>
+                </>
+              } />
             ))}
           </div>
         )}
 
-        {/* Demandes envoyées */}
         {activeTab === 'sent' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {sent.length === 0 ? (
@@ -248,20 +285,13 @@ export default function FriendsPage() {
                 <div style={{ fontFamily: 'Cinzel, serif' }}>Aucune demande envoyée</div>
               </div>
             ) : sent.map(f => (
-              <PlayerCard
-                key={f.id}
-                player={f.friend}
-                actions={
-                  <button className="action-btn" onClick={() => declineRequest(f.id)} style={{ background: 'transparent', color: 'rgba(201,76,76,0.6)', border: '1px solid rgba(201,76,76,0.2)' }}>
-                    Annuler
-                  </button>
-                }
-              />
+              <PlayerCard key={f.id} player={f.friend} actions={
+                <button className="action-btn" onClick={() => declineRequest(f.id)} style={{ background: 'transparent', color: 'rgba(201,76,76,0.6)', border: '1px solid rgba(201,76,76,0.2)' }}>Annuler</button>
+              } />
             ))}
           </div>
         )}
 
-        {/* Recherche */}
         {activeTab === 'search' && (
           <div>
             <input
@@ -275,21 +305,15 @@ export default function FriendsPage() {
                 const isFriend = friends.some(f => f.friend?.id === player.id)
                 const isPending = sent.some(f => f.friend?.id === player.id)
                 return (
-                  <PlayerCard
-                    key={player.id}
-                    player={player}
-                    actions={
-                      isFriend ? (
-                        <span style={{ fontSize: '0.75rem', color: '#4cc9a8', fontFamily: 'Rajdhani, sans-serif' }}>✓ Ami</span>
-                      ) : isPending ? (
-                        <span style={{ fontSize: '0.75rem', color: 'rgba(201,168,76,0.5)', fontFamily: 'Rajdhani, sans-serif' }}>En attente...</span>
-                      ) : (
-                        <button className="action-btn" onClick={() => sendRequest(player.id)} style={{ background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14' }}>
-                          + Ajouter
-                        </button>
-                      )
-                    }
-                  />
+                  <PlayerCard key={player.id} player={player} actions={
+                    isFriend ? (
+                      <span style={{ fontSize: '0.75rem', color: '#4cc9a8', fontFamily: 'Rajdhani, sans-serif' }}>✓ Ami</span>
+                    ) : isPending ? (
+                      <span style={{ fontSize: '0.75rem', color: 'rgba(201,168,76,0.5)', fontFamily: 'Rajdhani, sans-serif' }}>En attente...</span>
+                    ) : (
+                      <button className="action-btn" onClick={() => sendRequest(player.id)} style={{ background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14' }}>+ Ajouter</button>
+                    )
+                  } />
                 )
               })}
             </div>
