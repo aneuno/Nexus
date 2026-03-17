@@ -417,7 +417,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
 </div>
   </div>
           ) : (
-            <div style={{ width: '72px', height: '100px', flexShrink: 0, position: 'relative', overflow: 'hidden', borderRadius: '4px' }}>
+            <div style={{ width: '72px', height: '100px', flexShrink: 0, position: 'relative', overflow: 'visible', borderRadius: '4px' }}>
               <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: gameState.hasAttackedThisTurn[zone] && isActive ? 0.5 : 1 }} />
               <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(6,6,15,0.92)', border: '1px solid rgba(76,153,201,0.5)', borderRadius: '4px', padding: '2px 8px', display: 'flex', gap: '6px', alignItems: 'center', whiteSpace: 'nowrap' }}>
   <span style={{ fontSize: '0.65rem', color: '#4c99c9', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>DEF</span>
@@ -518,7 +518,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
       </div>
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '6px 10px', gap: '4px', overflow: 'hidden', background: 'radial-gradient(ellipse at center, #0a0a18 0%, #06060f 100%)' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '4px 6px', gap: '4px', overflow: 'hidden', background: 'radial-gradient(ellipse at center, #0a0a18 0%, #06060f 100%)' }}>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '3px 8px', background: 'rgba(232,76,76,0.05)', borderRadius: '5px', flexShrink: 0 }}>
             <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(232,224,204,0.5)', minWidth: '60px' }}>J{opp + 1}</span>
@@ -610,7 +610,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        <div style={{ width: '200px', flexShrink: 0, borderLeft: '1px solid rgba(201,168,76,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#08080f' }}>
+        <div style={{ width: '160px', flexShrink: 0, borderLeft: '1px solid rgba(201,168,76,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#08080f' }}>
           <div style={{ padding: '8px', borderBottom: '1px solid rgba(201,168,76,0.08)', flexShrink: 0 }}>
             {hoveredCard ? (
               <div style={{ animation: 'fadeIn 0.15s ease' }}>
