@@ -397,19 +397,19 @@ export default function GamePage({ params }: { params: { id: string } }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           transition: 'all 0.15s',
           position: 'relative',
-          zIndex: fc ? 2 : 1
+          zIndex: fc ? 10 : 1
         }}
       >
         {fc ? (
           fc.position === 'SET' ? (
-            <div style={{ width: '100px', height: '72px', transform: 'rotate(90deg)', flexShrink: 0, borderRadius: '4px', overflow: 'hidden' }}>
+            <div style={{ width: '100px', height: '72px', transform: 'rotate(90deg)', flexShrink: 0, borderRadius: '4px', overflow: 'hidden', position: 'absolute' }}>
               {cardBackUrl
                 ? <img src={cardBackUrl} alt="dos" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #1a1a35, #0f0f20)', border: '1px solid rgba(201,168,76,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontSize: '1.4rem', opacity: 0.4 }}>🎴</span></div>
               }
             </div>
           ) : fc.position === 'DEF' ? (
-            <div style={{ width: '100px', height: '72px', transform: 'rotate(90deg)', flexShrink: 0, borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ width: '100px', height: '72px', transform: 'rotate(90deg)', flexShrink: 0, borderRadius: '4px', overflow: 'hidden', position: 'absolute' }}>
               <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.75)', padding: '1px 3px', display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '0.5rem', color: '#4c99c9' }}>DEF</span>
