@@ -175,6 +175,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
   function showMsg(msg: string) { setFlashMsg(msg); setTimeout(() => setFlashMsg(null), 2500) }
 
   function doNextPhase(state: GameState): GameState {
+    if (state.winner !== null) return state
     const phases: GameState['phase'][] = ['DRAW', 'STANDBY', 'MAIN1', 'BATTLE', 'MAIN2', 'END']
     const idx = phases.indexOf(state.phase)
     if (idx === phases.length - 1) return doEndTurn(state)
@@ -187,7 +188,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
 
   function doDrawPhase(state: GameState): GameState {
     const p = state.activePlayer
-    if (state.decks[p].length === 0) return { ...state, winner: p === 0 ? 1 : 0 }
+    if (state.decks[p].length === 0) return { ...state, winner: p === 0 ? 1 : 0 as 0 | 1 }
     const decks = state.decks.map(d => [...d]) as [CardData[], CardData[]]
     const hands = state.hands.map(h => [...h]) as [CardData[], CardData[]]
     const drawn = decks[p].shift()!
@@ -209,6 +210,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
   }
 
   function doEndTurn(state: GameState): GameState {
+    if (state.lp[0] <= 0 || state.lp[1] <= 0) return state
     const next = state.activePlayer === 0 ? 1 : 0 as 0 | 1
     const newTurn = next === 0 ? state.turn + 1 : state.turn
     const monsterZones = state.monsterZones.map(row =>
