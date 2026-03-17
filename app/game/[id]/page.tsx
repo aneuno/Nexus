@@ -418,7 +418,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
   </div>
           ) : (
             <div style={{ width: '100px', height: '140px', flexShrink: 0, position: 'relative', overflow: 'visible', borderRadius: '4px' }}>
-              <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: gameState.hasAttackedThisTurn[zone] && isActive ? 0.5 : 1 }} />
+              <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: gameState.hasAttackedThisTurn[zone] && isActive ? 0.5 : 1, borderRadius: '4px' }} />
               <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(6,6,15,0.92)', border: '1px solid rgba(76,153,201,0.5)', borderRadius: '4px', padding: '2px 8px', display: 'flex', gap: '6px', alignItems: 'center', whiteSpace: 'nowrap' }}>
   <span style={{ fontSize: '0.65rem', color: '#4c99c9', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>DEF</span>
   <span style={{ fontSize: '0.72rem', color: '#e8e0cc', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>{fc.card.def}</span>
