@@ -554,7 +554,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
           </div>
 
           {/* TERRAIN P Monstres — ── CHANGEMENT 2 : gap de 50px ── */}
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '50px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <div style={{ width: '100px', flexShrink: 0 }} />
             {gameState.monsterZones[p].map((_, i) => <MonsterZone key={i} player={p} zone={i} />)}
             <DeckZone player={p} />
