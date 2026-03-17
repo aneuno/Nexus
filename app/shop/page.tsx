@@ -11,10 +11,13 @@ const supabase = createClient(
 export default function ShopPage() {
   const [profile, setProfile] = useState<any>(null)
   const [activeTab, setActiveTab] = useState('icons')
+  const [items, setItems] = useState<any[]>([])
   const [icons, setIcons] = useState<any[]>([])
   const [banners, setBanners] = useState<any[]>([])
   const [titles, setTitles] = useState<any[]>([])
   const [badges, setBadges] = useState<any[]>([])
+  const [cardBacks, setCardBacks] = useState<any[]>([])
+  const [deckSkins, setDeckSkins] = useState<any[]>([])
   const [owned, setOwned] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [confirm, setConfirm] = useState<any>(null)
@@ -32,12 +35,15 @@ export default function ShopPage() {
       const { data: inv } = await supabase.from('player_inventory').select('item_id').eq('player_id', session.user.id)
       if (inv) setOwned(inv.map((i: any) => i.item_id))
 
-      const { data: items } = await supabase.from('shop_items').select('*').eq('is_active', true)
-      if (items) {
-        setIcons(items.filter((i: any) => i.item_type === 'avatar'))
-        setBanners(items.filter((i: any) => i.item_type === 'banner'))
-        setTitles(items.filter((i: any) => i.item_type === 'title'))
-        setBadges(items.filter((i: any) => i.item_type === 'badge'))
+      const { data: allItems } = await supabase.from('shop_items').select('*').eq('is_active', true)
+      if (allItems) {
+        setItems(allItems)
+        setIcons(allItems.filter((i: any) => i.item_type === 'avatar'))
+        setBanners(allItems.filter((i: any) => i.item_type === 'banner'))
+        setTitles(allItems.filter((i: any) => i.item_type === 'title'))
+        setBadges(allItems.filter((i: any) => i.item_type === 'badge'))
+        setCardBacks(allItems.filter((i: any) => i.item_type === 'card_back'))
+        setDeckSkins(allItems.filter((i: any) => i.item_type === 'deck_skin'))
       }
 
       setLoading(false)
@@ -48,6 +54,8 @@ export default function ShopPage() {
   const tabs = [
     { id: 'icons', label: '👤 Icônes' },
     { id: 'banners', label: '🖼️ Bannières' },
+    { id: 'card_backs', label: '🎴 Dos de cartes' },
+    { id: 'deck_skins', label: '🗂️ Decks' },
     { id: 'titles', label: '📜 Titres' },
     { id: 'badges', label: '🏅 Badges' },
   ]
@@ -118,19 +126,15 @@ export default function ShopPage() {
   const ItemCard = ({ item }: { item: any }) => {
     const isOwned = owned.includes(item.item_id)
     const rc = rarityColor(item.rarity || 'common')
+    const isCard = item.item_type === 'card_back' || item.item_type === 'deck_skin'
 
     return (
       <div style={{
         background: '#0f0f1e',
         border: `1px solid ${isOwned ? 'rgba(201,168,76,0.15)' : rc + '40'}`,
-        borderRadius: '10px',
-        padding: '16px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px',
-        opacity: isOwned ? 0.6 : 1,
-        position: 'relative',
-        transition: 'all 0.2s'
+        borderRadius: '10px', padding: '16px',
+        display: 'flex', flexDirection: 'column', gap: '10px',
+        opacity: isOwned ? 0.6 : 1, position: 'relative', transition: 'all 0.2s'
       }}>
         {isOwned && (
           <div style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '10px', padding: '2px 8px', fontSize: '0.62rem', color: '#c9a84c', letterSpacing: '0.1em' }}>
@@ -140,20 +144,21 @@ export default function ShopPage() {
 
         <div style={{
           width: '100%',
-          height: item.item_type === 'avatar' ? '120px' : item.item_type === 'banner' ? '80px' : '120px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#141428',
-          borderRadius: '6px',
-          border: `1px solid ${rc}30`
+          height: item.item_type === 'avatar' ? '120px' : item.item_type === 'banner' ? '80px' : item.item_type === 'card_back' ? '140px' : item.item_type === 'deck_skin' ? '140px' : '120px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: '#141428', borderRadius: '6px', border: `1px solid ${rc}30`
         }}>
           {item.image_url ? (
             item.item_type === 'avatar' ? (
-              <div
-                onClick={() => setPreview(item)}
-                style={{ width: '90px', height: '90px', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${rc}`, cursor: 'zoom-in', flexShrink: 0 }}
-              >
+              <div onClick={() => setPreview(item)} style={{ width: '90px', height: '90px', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${rc}`, cursor: 'zoom-in', flexShrink: 0 }}>
+                <img src={item.image_url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            ) : item.item_type === 'card_back' ? (
+              <div onClick={() => setPreview(item)} style={{ width: '80px', height: '112px', borderRadius: '6px', overflow: 'hidden', border: `2px solid ${rc}`, cursor: 'zoom-in' }}>
+                <img src={item.image_url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            ) : item.item_type === 'deck_skin' ? (
+              <div onClick={() => setPreview(item)} style={{ width: '80px', height: '112px', borderRadius: '6px', overflow: 'hidden', border: `2px solid ${rc}`, cursor: 'zoom-in' }}>
                 <img src={item.image_url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
             ) : (
@@ -161,7 +166,7 @@ export default function ShopPage() {
             )
           ) : (
             <span style={{ fontSize: '2rem', opacity: 0.3 }}>
-              {item.item_type === 'avatar' ? '👤' : item.item_type === 'banner' ? '🖼️' : item.item_type === 'title' ? '📜' : '🏅'}
+              {item.item_type === 'avatar' ? '👤' : item.item_type === 'banner' ? '🖼️' : item.item_type === 'card_back' ? '🎴' : item.item_type === 'deck_skin' ? '🗂️' : item.item_type === 'title' ? '📜' : '🏅'}
             </span>
           )}
         </div>
@@ -173,22 +178,15 @@ export default function ShopPage() {
 
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {item.price_coins > 0 && (
-            <span style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '10px', padding: '3px 8px', fontSize: '0.75rem', color: '#c9a84c' }}>
-              ✦ {item.price_coins}
-            </span>
+            <span style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '10px', padding: '3px 8px', fontSize: '0.75rem', color: '#c9a84c' }}>✦ {item.price_coins}</span>
           )}
           {item.price_crystals > 0 && (
-            <span style={{ background: 'rgba(76,201,168,0.1)', border: '1px solid rgba(76,201,168,0.3)', borderRadius: '10px', padding: '3px 8px', fontSize: '0.75rem', color: '#4cc9a8' }}>
-              ◈ {item.price_crystals}
-            </span>
+            <span style={{ background: 'rgba(76,201,168,0.1)', border: '1px solid rgba(76,201,168,0.3)', borderRadius: '10px', padding: '3px 8px', fontSize: '0.75rem', color: '#4cc9a8' }}>◈ {item.price_crystals}</span>
           )}
         </div>
 
         {!isOwned ? (
-          <button
-            onClick={() => setConfirm(item)}
-            style={{ width: '100%', padding: '9px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '5px', fontFamily: 'Cinzel, serif', fontSize: '0.78rem', letterSpacing: '0.1em', cursor: 'pointer' }}
-          >
+          <button onClick={() => setConfirm(item)} style={{ width: '100%', padding: '9px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '5px', fontFamily: 'Cinzel, serif', fontSize: '0.78rem', letterSpacing: '0.1em', cursor: 'pointer' }}>
             Acheter
           </button>
         ) : (
@@ -215,10 +213,7 @@ export default function ShopPage() {
   )
 
   const currentItems = {
-    icons: icons,
-    banners: banners,
-    titles: titles,
-    badges: badges
+    icons, banners, card_backs: cardBacks, deck_skins: deckSkins, titles, badges
   }[activeTab] || []
 
   return (
@@ -238,7 +233,7 @@ export default function ShopPage() {
       `}</style>
 
       <div style={{ background: '#0a0a14', borderBottom: '1px solid rgba(201,168,76,0.2)', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-        <a href="/" style={{ fontSize: '0.8rem', color: 'rgba(201,168,76,0.5)', textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif' }}>← Menu</a>
+        <button onClick={() => window.history.back()} style={{ fontSize: '0.8rem', color: 'rgba(201,168,76,0.5)', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif' }}>← Retour</button>
         <div style={{ width: '1px', height: '16px', background: 'rgba(201,168,76,0.2)' }} />
         <span style={{ fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '1rem', letterSpacing: '0.15em' }}>Boutique</span>
         <div style={{ flex: 1 }} />
@@ -259,7 +254,7 @@ export default function ShopPage() {
       <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
         {currentItems.length === 0 ? (
           <EmptyState
-            icon={activeTab === 'icons' ? '👤' : activeTab === 'banners' ? '🖼️' : activeTab === 'titles' ? '📜' : '🏅'}
+            icon={activeTab === 'icons' ? '👤' : activeTab === 'banners' ? '🖼️' : activeTab === 'card_backs' ? '🎴' : activeTab === 'deck_skins' ? '🗂️' : activeTab === 'titles' ? '📜' : '🏅'}
             text="Aucun article disponible pour le moment"
           />
         ) : (
@@ -268,9 +263,7 @@ export default function ShopPage() {
             gridTemplateColumns: activeTab === 'titles' ? '1fr' : activeTab === 'banners' ? 'repeat(auto-fill, minmax(260px, 1fr))' : 'repeat(auto-fill, minmax(180px, 1fr))',
             gap: '14px'
           }}>
-            {currentItems.map((item: any) => (
-              <ItemCard key={item.id} item={item} />
-            ))}
+            {currentItems.map((item: any) => <ItemCard key={item.id} item={item} />)}
           </div>
         )}
       </div>
@@ -283,20 +276,12 @@ export default function ShopPage() {
               Acheter <span style={{ color: '#c9a84c' }}>{confirm.name}</span> ?
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '20px' }}>
-              {confirm.price_coins > 0 && (
-                <span style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '10px', padding: '4px 12px', fontSize: '0.82rem', color: '#c9a84c' }}>✦ {confirm.price_coins}</span>
-              )}
-              {confirm.price_crystals > 0 && (
-                <span style={{ background: 'rgba(76,201,168,0.1)', border: '1px solid rgba(76,201,168,0.3)', borderRadius: '10px', padding: '4px 12px', fontSize: '0.82rem', color: '#4cc9a8' }}>◈ {confirm.price_crystals}</span>
-              )}
+              {confirm.price_coins > 0 && <span style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '10px', padding: '4px 12px', fontSize: '0.82rem', color: '#c9a84c' }}>✦ {confirm.price_coins}</span>}
+              {confirm.price_crystals > 0 && <span style={{ background: 'rgba(76,201,168,0.1)', border: '1px solid rgba(76,201,168,0.3)', borderRadius: '10px', padding: '4px 12px', fontSize: '0.82rem', color: '#4cc9a8' }}>◈ {confirm.price_crystals}</span>}
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setConfirm(null)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '5px', color: 'rgba(232,224,204,0.5)', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.88rem' }}>
-                Annuler
-              </button>
-              <button onClick={() => buyItem(confirm)} style={{ flex: 1, padding: '10px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '5px', cursor: 'pointer', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', letterSpacing: '0.1em' }}>
-                Confirmer
-              </button>
+              <button onClick={() => setConfirm(null)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '5px', color: 'rgba(232,224,204,0.5)', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.88rem' }}>Annuler</button>
+              <button onClick={() => buyItem(confirm)} style={{ flex: 1, padding: '10px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '5px', cursor: 'pointer', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', letterSpacing: '0.1em' }}>Confirmer</button>
             </div>
           </div>
         </div>
@@ -306,8 +291,8 @@ export default function ShopPage() {
         <div onClick={() => setPreview(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '20px', cursor: 'zoom-out' }}>
           <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
             <div style={{
-              width: preview.item_type === 'avatar' ? '200px' : '500px',
-              height: preview.item_type === 'avatar' ? '200px' : preview.item_type === 'banner' ? '160px' : '300px',
+              width: preview.item_type === 'avatar' ? '200px' : preview.item_type === 'card_back' || preview.item_type === 'deck_skin' ? '200px' : '500px',
+              height: preview.item_type === 'avatar' ? '200px' : preview.item_type === 'card_back' || preview.item_type === 'deck_skin' ? '280px' : preview.item_type === 'banner' ? '160px' : '300px',
               borderRadius: preview.item_type === 'avatar' ? '50%' : '12px',
               overflow: 'hidden',
               border: `2px solid ${rarityColor(preview.rarity || 'common')}`,
