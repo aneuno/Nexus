@@ -10,6 +10,7 @@ const supabase = createClient(
 
 export default function HomePage() {
   const [profile, setProfile] = useState<any>(null)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
     async function init() {
@@ -24,6 +25,13 @@ export default function HomePage() {
         .eq('id', session.user.id)
         .single()
       setProfile(data)
+
+      const { count } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('player_id', session.user.id)
+        .eq('is_read', false)
+      setUnreadCount(count || 0)
     }
     init()
   }, [])
@@ -92,6 +100,14 @@ export default function HomePage() {
       {/* BARRE DU HAUT */}
       <div style={{ background: 'rgba(10,10,20,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', padding: '8px 20px', display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
         <a href="/friends" className="nav-top-btn">👥 Amis</a>
+        <a href="/notifications" className="nav-top-btn" style={{ position: 'relative' }}>
+          🔔 Notifications
+          {unreadCount > 0 && (
+            <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#c9a84c', color: '#0a0a14', borderRadius: '50%', width: '16px', height: '16px', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </a>
         <a href="/profile" className="nav-top-btn">👤 Profil</a>
         <div style={{ flex: 1 }} />
         <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} className="nav-top-btn" style={{ color: 'rgba(201,76,76,0.7)', borderColor: 'rgba(201,76,76,0.2)' }}>
