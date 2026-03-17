@@ -387,7 +387,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
         onMouseEnter={() => fc && fc.position !== 'SET' && setHoveredCard(fc.card)}
         onMouseLeave={() => setHoveredCard(null)}
         style={{
-          width: '72px', height: '100px', borderRadius: '6px', flexShrink: 0,
+          width: '100px', height: '140px', borderRadius: '6px', flexShrink: 0,
           border: isSelected ? '2px solid #c9a84c' : isAttacking ? '2px solid #e84c4c' : isTarget && fc ? '2px solid #e84c4c' : isTribute ? '2px solid #ff8800' : '1px solid rgba(201,168,76,0.15)',
           background: isSelected ? 'rgba(201,168,76,0.1)' : isTarget && fc ? 'rgba(232,76,76,0.08)' : 'rgba(201,168,76,0.03)',
           cursor: 'pointer',
@@ -402,22 +402,22 @@ export default function GamePage({ params }: { params: { id: string } }) {
       >
         {fc ? (
           fc.position === 'SET' ? (
-  <div style={{ width: '100px', height: '72px', position: 'absolute', borderRadius: '4px', overflow: 'hidden' }}>
+  <div style={{ width: '140px', height: '100px', position: 'absolute', borderRadius: '4px', overflow: 'hidden' }}>
     {cardBackUrl
-      ? <img src={cardBackUrl} alt="dos" style={{ width: '72px', height: '100px', objectFit: 'cover', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(90deg)' }} />
+      ? <img src={cardBackUrl} alt="dos" style={{ width: '100px', height: '140px', objectFit: 'cover', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(90deg)' }} />
       : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #1a1a35, #0f0f20)', border: '1px solid rgba(201,168,76,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontSize: '1.4rem', opacity: 0.4 }}>🎴</span></div>
     }
   </div>
           ) : fc.position === 'DEF' ? (
-  <div style={{ width: '100px', height: '72px', position: 'absolute', borderRadius: '4px', overflow: 'hidden' }}>
-    <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '72px', height: '100px', objectFit: 'cover', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(90deg)' }} />
+  <div style={{ width: '140px', height: '100px', position: 'absolute', borderRadius: '4px', overflow: 'hidden' }}>
+    <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '100px', height: '140px', objectFit: 'cover', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(90deg)' }} />
     <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(6,6,15,0.92)', border: '1px solid rgba(232,76,76,0.5)', borderRadius: '4px', padding: '2px 8px', display: 'flex', gap: '6px', alignItems: 'center', whiteSpace: 'nowrap' }}>
   <span style={{ fontSize: '0.65rem', color: '#e84c4c', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>ATK</span>
   <span style={{ fontSize: '0.72rem', color: '#e8e0cc', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>{fc.card.atk}</span>
 </div>
   </div>
           ) : (
-            <div style={{ width: '72px', height: '100px', flexShrink: 0, position: 'relative', overflow: 'visible', borderRadius: '4px' }}>
+            <div style={{ width: '100px', height: '140px', flexShrink: 0, position: 'relative', overflow: 'visible', borderRadius: '4px' }}>
               <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: gameState.hasAttackedThisTurn[zone] && isActive ? 0.5 : 1 }} />
               <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(6,6,15,0.92)', border: '1px solid rgba(76,153,201,0.5)', borderRadius: '4px', padding: '2px 8px', display: 'flex', gap: '6px', alignItems: 'center', whiteSpace: 'nowrap' }}>
   <span style={{ fontSize: '0.65rem', color: '#4c99c9', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>DEF</span>
@@ -438,27 +438,27 @@ export default function GamePage({ params }: { params: { id: string } }) {
   const SpellZone = ({ player, zone }: { player: 0 | 1, zone: number }) => {
     const fc = gameState.spellZones[player][zone]
     return (
-      <div style={{ width: '72px', height: '100px', borderRadius: '6px', flexShrink: 0, border: '1px solid rgba(76,153,201,0.15)', background: 'rgba(76,153,201,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden' }}>
+      <div style={{ width: '100px', height: '140px', borderRadius: '6px', flexShrink: 0, border: '1px solid rgba(76,153,201,0.15)', background: 'rgba(76,153,201,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden' }}>
         {fc ? <img src={fc.card.image_url} alt={fc.card.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '1rem', opacity: 0.12, color: '#4c99c9' }}>S</span>}
       </div>
     )
   }
 
   const FieldZone = ({ label }: { label: string }) => (
-    <div style={{ width: '72px', height: '100px', borderRadius: '6px', flexShrink: 0, border: '1px dashed rgba(201,168,76,0.1)', background: 'rgba(201,168,76,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ width: '100px', height: '140px', borderRadius: '6px', flexShrink: 0, border: '1px dashed rgba(201,168,76,0.1)', background: 'rgba(201,168,76,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <span style={{ fontSize: '0.5rem', color: 'rgba(201,168,76,0.2)', textAlign: 'center', fontFamily: 'Rajdhani, sans-serif' }}>{label}</span>
     </div>
   )
 
   const DeckZone = ({ player }: { player: 0 | 1 }) => (
-    <div style={{ width: '72px', height: '100px', borderRadius: '6px', flexShrink: 0, border: '1px solid rgba(201,168,76,0.2)', background: 'linear-gradient(135deg, #141428, #1a1a35)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+    <div style={{ width: '100px', height: '140px', borderRadius: '6px', flexShrink: 0, border: '1px solid rgba(201,168,76,0.2)', background: 'linear-gradient(135deg, #141428, #1a1a35)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
       <span style={{ fontSize: '0.6rem', color: 'rgba(201,168,76,0.4)', fontFamily: 'Rajdhani, sans-serif' }}>DECK</span>
       <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: '#c9a84c' }}>{gameState.decks[player].length}</span>
     </div>
   )
 
   const GraveyardZone = ({ player }: { player: 0 | 1 }) => (
-    <div onClick={() => setShowGraveyard({ player })} style={{ width: '72px', height: '100px', borderRadius: '6px', flexShrink: 0, border: '1px solid rgba(201,76,76,0.25)', background: 'rgba(201,76,76,0.04)', cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+    <div onClick={() => setShowGraveyard({ player })} style={{ width: '100px', height: '140px', borderRadius: '6px', flexShrink: 0, border: '1px solid rgba(201,76,76,0.25)', background: 'rgba(201,76,76,0.04)', cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
       {gameState.graveyards[player].length > 0 ? (
         <>
           <img src={gameState.graveyards[player][gameState.graveyards[player].length - 1].image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
@@ -534,14 +534,14 @@ export default function GamePage({ params }: { params: { id: string } }) {
           </div>
 
           {/* TERRAIN OPP Magie/Piège */}
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <GraveyardZone player={opp} />
             {gameState.spellZones[opp].map((_, i) => <SpellZone key={i} player={opp} zone={i} />)}
             <FieldZone label="TERRAIN" />
           </div>
 
           {/* TERRAIN OPP Monstres — ── CHANGEMENT 2 : gap de 50px ── */}
-          <div style={{ display: 'flex', gap: '50px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <DeckZone player={opp} />
             {gameState.monsterZones[opp].map((_, i) => <MonsterZone key={i} player={opp} zone={i} />)}
             <div style={{ width: '72px', flexShrink: 0 }} />
@@ -554,14 +554,14 @@ export default function GamePage({ params }: { params: { id: string } }) {
           </div>
 
           {/* TERRAIN P Monstres — ── CHANGEMENT 2 : gap de 50px ── */}
-          <div style={{ display: 'flex', gap: '50px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <div style={{ width: '72px', flexShrink: 0 }} />
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: '100px', flexShrink: 0 }} />
             {gameState.monsterZones[p].map((_, i) => <MonsterZone key={i} player={p} zone={i} />)}
             <DeckZone player={p} />
           </div>
 
           {/* TERRAIN P Magie/Piège */}
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <FieldZone label="TERRAIN" />
             {gameState.spellZones[p].map((_, i) => <SpellZone key={i} player={p} zone={i} />)}
             <GraveyardZone player={p} />
