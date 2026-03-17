@@ -100,7 +100,6 @@ export default function NotificationsPage() {
         .notif-row:hover { border-color: rgba(201,168,76,0.4); }
       `}</style>
 
-      {/* Topbar */}
       <div style={{ background: '#0a0a14', borderBottom: '1px solid rgba(201,168,76,0.2)', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
         <button onClick={() => window.history.back()} style={{ fontSize: '0.8rem', color: 'rgba(201,168,76,0.5)', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif' }}>← Retour</button>
         <div style={{ width: '1px', height: '16px', background: 'rgba(201,168,76,0.2)' }} />
@@ -112,7 +111,7 @@ export default function NotificationsPage() {
         )}
         <div style={{ flex: 1 }} />
         {unreadCount > 0 && (
-          <button onClick={markAllRead} style={{ fontSize: '0.75rem', color: 'rgba(201,168,76,0.5)', background: 'transparent', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif', letterSpacing: '0.05em' }}>
+          <button onClick={markAllRead} style={{ fontSize: '0.75rem', color: 'rgba(201,168,76,0.5)', background: 'transparent', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif' }}>
             Tout marquer comme lu
           </button>
         )}
@@ -139,10 +138,7 @@ export default function NotificationsPage() {
                   <div style={{ fontSize: '0.78rem', color: 'rgba(232,224,204,0.5)', lineHeight: '1.4', marginBottom: '6px' }}>{n.message}</div>
                   <div style={{ fontSize: '0.68rem', color: 'rgba(201,168,76,0.3)' }}>{timeAgo(n.created_at)}</div>
                 </div>
-                <button
-                  onClick={e => { e.stopPropagation(); deleteNotification(n.id) }}
-                  style={{ background: 'transparent', border: 'none', color: 'rgba(201,76,76,0.4)', cursor: 'pointer', fontSize: '1rem', padding: '4px', flexShrink: 0 }}
-                >
+                <button onClick={e => { e.stopPropagation(); deleteNotification(n.id) }} style={{ background: 'transparent', border: 'none', color: 'rgba(201,76,76,0.4)', cursor: 'pointer', fontSize: '1rem', padding: '4px', flexShrink: 0 }}>
                   ×
                 </button>
               </div>
