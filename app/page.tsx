@@ -91,7 +91,6 @@ export default function HomePage() {
 
       {/* BARRE DU HAUT */}
       <div style={{ background: 'rgba(10,10,20,0.95)', borderBottom: '1px solid rgba(201,168,76,0.1)', padding: '8px 20px', display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
-        <a href="/leaderboard" className="nav-top-btn">🏆 Classement</a>
         <a href="/friends" className="nav-top-btn">👥 Amis</a>
         <a href="/profile" className="nav-top-btn">👤 Profil</a>
         <div style={{ flex: 1 }} />
