@@ -28,6 +28,7 @@ export default function LeaderboardPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { window.location.href = '/login'; return }
       setMyId(session.user.id)
+      await loadLeaderboardWithId(session.user.id, 'wins')
       setLoading(false)
     }
     init()
@@ -35,23 +36,21 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     if (!myId) return
-    loadLeaderboard()
-  }, [activeTab, myId])
+    loadLeaderboardWithId(myId, activeTab)
+  }, [activeTab])
 
-  async function loadLeaderboard() {
+  async function loadLeaderboardWithId(userId: string, tab: string) {
     setLoading(true)
-    const tab = tabs.find(t => t.id === activeTab)
-    if (!tab) return
+    const tabObj = tabs.find(t => t.id === tab)
+    if (!tabObj) return
 
-    if (activeTab === 'cards') {
-      // Cartes : compter depuis player_cards
+    if (tab === 'cards') {
       const { data } = await supabase
         .from('player_cards')
         .select('player_id, quantity')
 
       if (!data) { setLoading(false); return }
 
-      // Agréger par joueur
       const countMap: Record<string, number> = {}
       for (const row of data) {
         countMap[row.player_id] = (countMap[row.player_id] || 0) + row.quantity
@@ -64,7 +63,7 @@ export default function LeaderboardPage() {
       const playerIds = sorted.map(([id]) => id)
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, username, avatar, rank, avatars(image_url)')
+        .select('id, username, avatar, rank, avatar_id, avatars(image_url)')
         .in('id', playerIds)
 
       const result = sorted.map(([id, count], index) => {
@@ -73,25 +72,25 @@ export default function LeaderboardPage() {
       })
 
       setPlayers(result)
-      const myIndex = result.findIndex(p => p.id === myId)
+      const myIndex = result.findIndex(p => p.id === userId)
       setMyRank(myIndex >= 0 ? myIndex + 1 : null)
     } else {
       const { data } = await supabase
         .from('profiles')
-        .select('id, username, avatar, rank, rank_points, wins, nexus_coins, crystals, avatars(image_url)')
-        .order(tab.field, { ascending: false })
+        .select('id, username, avatar, rank, rank_points, wins, nexus_coins, crystals, avatar_id, avatars(image_url)')
+        .order(tabObj.field, { ascending: false })
         .limit(50)
 
       if (!data) { setLoading(false); return }
 
       const result = data.map((p, i) => ({
         ...p,
-        _value: p[tab.field],
+        _value: p[tabObj.field],
         _rank: i + 1
       }))
 
       setPlayers(result)
-      const myIndex = result.findIndex(p => p.id === myId)
+      const myIndex = result.findIndex(p => p.id === userId)
       setMyRank(myIndex >= 0 ? myIndex + 1 : null)
     }
 
@@ -134,7 +133,7 @@ export default function LeaderboardPage() {
         .tab-btn.active { color: #c9a84c; border-bottom-color: #c9a84c; }
         .tab-btn:hover { color: #e8e0cc; }
         .player-row {
-          display: flex; align-items: center; gap: '12px';
+          display: flex; align-items: center; gap: 12px;
           background: #0f0f1e; border: 1px solid rgba(201,168,76,0.15);
           border-radius: 8px; padding: 12px 16px;
           transition: all 0.2s; text-decoration: none; color: inherit;
@@ -165,7 +164,7 @@ export default function LeaderboardPage() {
           {/* 2ème */}
           <div style={{ textAlign: 'center', flex: 1, maxWidth: '140px' }}>
             <div style={{ width: '56px', height: '56px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 8px', border: '2px solid #C0C0C0', background: '#141428', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem' }}>
-              {players[1]?.avatars?.image_url ? <img src={players[1].avatars.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : players[1]?.avatar || '🐉'}
+              {players[1]?.avatars?.image_url ? <img src={players[1].avatars.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : players[1]?.avatar || '🐉'}
             </div>
             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: '#C0C0C0', marginBottom: '2px' }}>{players[1]?.username}</div>
             <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)', marginBottom: '6px' }}>{valueLabel(players[1]?._value)}</div>
@@ -175,7 +174,7 @@ export default function LeaderboardPage() {
           {/* 1er */}
           <div style={{ textAlign: 'center', flex: 1, maxWidth: '140px' }}>
             <div style={{ width: '68px', height: '68px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 8px', border: '3px solid #FFD700', background: '#141428', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', boxShadow: '0 0 20px rgba(255,215,0,0.3)' }}>
-              {players[0]?.avatars?.image_url ? <img src={players[0].avatars.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : players[0]?.avatar || '🐉'}
+              {players[0]?.avatars?.image_url ? <img src={players[0].avatars.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : players[0]?.avatar || '🐉'}
             </div>
             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#FFD700', marginBottom: '2px' }}>{players[0]?.username}</div>
             <div style={{ fontSize: '0.72rem', color: 'rgba(232,224,204,0.5)', marginBottom: '6px' }}>{valueLabel(players[0]?._value)}</div>
@@ -185,7 +184,7 @@ export default function LeaderboardPage() {
           {/* 3ème */}
           <div style={{ textAlign: 'center', flex: 1, maxWidth: '140px' }}>
             <div style={{ width: '56px', height: '56px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 8px', border: '2px solid #CD7F32', background: '#141428', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem' }}>
-              {players[2]?.avatars?.image_url ? <img src={players[2].avatars.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : players[2]?.avatar || '🐉'}
+              {players[2]?.avatars?.image_url ? <img src={players[2].avatars.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : players[2]?.avatar || '🐉'}
             </div>
             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: '#CD7F32', marginBottom: '2px' }}>{players[2]?.username}</div>
             <div style={{ fontSize: '0.7rem', color: 'rgba(232,224,204,0.4)', marginBottom: '6px' }}>{valueLabel(players[2]?._value)}</div>
@@ -198,10 +197,15 @@ export default function LeaderboardPage() {
       <div style={{ flex: 1, padding: '16px 20px', overflowY: 'auto', maxWidth: '700px', width: '100%', margin: '0 auto' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(201,168,76,0.4)' }}>Chargement...</div>
+        ) : players.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(201,168,76,0.4)' }}>
+            <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🏆</div>
+            <div style={{ fontFamily: 'Cinzel, serif' }}>Aucun joueur pour le moment</div>
+          </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {players.slice(3).map((player, i) => (
-              <a key={player.id} href={`/profile/${player.id}`} className={`player-row ${player.id === myId ? 'me' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', color: 'inherit' }}>
+            {players.slice(3).map((player) => (
+              <a key={player.id} href={`/profile/${player.id}`} className={`player-row ${player.id === myId ? 'me' : ''}`}>
                 <div style={{ width: '32px', textAlign: 'center', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: rankColor(player._rank), flexShrink: 0 }}>
                   {rankEmoji(player._rank)}
                 </div>
@@ -224,8 +228,7 @@ export default function LeaderboardPage() {
           </div>
         )}
 
-        {/* Ma position si pas dans le top 50 */}
-        {!loading && myRank === null && (
+        {!loading && myRank === null && players.length > 0 && (
           <div style={{ marginTop: '16px', padding: '12px 16px', background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', textAlign: 'center', fontSize: '0.82rem', color: 'rgba(201,168,76,0.5)' }}>
             Vous n'êtes pas dans le top 50
           </div>
