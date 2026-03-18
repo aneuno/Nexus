@@ -416,8 +416,9 @@ export default function GamePage({ params }: { params: { id: string } }) {
 
   if (loading || !gameState) return <main style={{ minHeight: '100vh', background: '#0a0a14', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c9a84c' }}>Chargement de la partie...</main>
 
+  const me = myRole
+  const opp = myRole === 0 ? 1 : 0 as 0 | 1
   const p = gameState.activePlayer
-  const opp = p === 0 ? 1 : 0 as 0 | 1
 
   const MonsterZone = ({ player, zone }: { player: 0 | 1, zone: number }) => {
     const fc = gameState.monsterZones[player][zone]
@@ -540,9 +541,9 @@ export default function GamePage({ params }: { params: { id: string } }) {
       {gameState.showSummonModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
           <div style={{ background: '#0f0f1e', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '12px', padding: '24px', maxWidth: '320px', width: '100%', textAlign: 'center', animation: 'fadeIn 0.2s ease' }}>
-            <div style={{ fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '0.9rem', marginBottom: '6px' }}>{gameState.hands[p][gameState.showSummonModal.handIdx]?.name}</div>
+            <div style={{ fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '0.9rem', marginBottom: '6px' }}>{gameState.hands[me][gameState.showSummonModal.handIdx]?.name}</div>
             <div style={{ fontSize: '0.75rem', color: 'rgba(232,224,204,0.5)', marginBottom: '20px' }}>
-              Niv.{gameState.hands[p][gameState.showSummonModal.handIdx]?.level} · ATK {gameState.hands[p][gameState.showSummonModal.handIdx]?.atk} / DEF {gameState.hands[p][gameState.showSummonModal.handIdx]?.def}
+              Niv.{gameState.hands[me][gameState.showSummonModal.handIdx]?.level} · ATK {gameState.hands[me][gameState.showSummonModal.handIdx]?.atk} / DEF {gameState.hands[me][gameState.showSummonModal.handIdx]?.def}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <button onClick={() => { const { handIdx } = gameState.showSummonModal!; setGameState(prev => { if (!prev) return prev; const next = tryPlaceCard(prev, handIdx, prev.pendingSummonZone!, 'ATK'); syncGameState(next); return next }) }} style={{ padding: '12px', background: 'rgba(232,76,76,0.1)', border: '1px solid rgba(232,76,76,0.4)', borderRadius: '6px', color: '#e84c4c', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', cursor: 'pointer' }}>⚔️ Invoquer en ATK</button>
@@ -567,7 +568,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '4px 6px', gap: '4px', overflow: 'hidden', background: 'radial-gradient(ellipse at center, #0a0a18 0%, #06060f 100%)' }}>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '3px 8px', background: 'rgba(232,76,76,0.05)', borderRadius: '5px', flexShrink: 0 }}>
-            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(232,224,204,0.5)', minWidth: '60px' }}>J{opp + 1}</span>
+            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(232,224,204,0.5)', minWidth: '60px' }}>J{opp + 1}{opp === p ? ' ⚡' : ''}</span>
             <div style={{ flex: 1, height: '5px', background: 'rgba(232,224,204,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${Math.max(0, (gameState.lp[opp] / STARTING_LP) * 100)}%`, background: gameState.lp[opp] > 3000 ? '#4cc9a8' : gameState.lp[opp] > 1000 ? '#c9a84c' : '#e84c4c', transition: 'all 0.4s', borderRadius: '3px' }} />
             </div>
@@ -602,15 +603,15 @@ export default function GamePage({ params }: { params: { id: string } }) {
           {/* TERRAIN P Monstres */}
           <div style={{ display: 'flex', gap: '50px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <div style={{ width: '100px', flexShrink: 0 }} />
-            {gameState.monsterZones[p].map((_, i) => <MonsterZone key={i} player={p} zone={i} />)}
-            <DeckZone player={p} />
+            {gameState.monsterZones[me].map((_, i) => <MonsterZone key={i} player={me} zone={i} />)}
+            <DeckZone player={me} />
           </div>
 
           {/* TERRAIN P Magie/Piège */}
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <FieldZone label="TERRAIN" />
-            {gameState.spellZones[p].map((_, i) => <SpellZone key={i} player={p} zone={i} />)}
-            <GraveyardZone player={p} />
+            {gameState.spellZones[me].map((_, i) => <SpellZone key={i} player={me} zone={i} />)}
+            <GraveyardZone player={me} />
           </div>
 
           <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexShrink: 0, minHeight: '28px', alignItems: 'center' }}>
@@ -635,16 +636,16 @@ export default function GamePage({ params }: { params: { id: string } }) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '3px 8px', background: 'rgba(76,201,168,0.05)', borderRadius: '5px', flexShrink: 0 }}>
-            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(232,224,204,0.5)', minWidth: '60px' }}>J{p + 1} (vous)</span>
+            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(232,224,204,0.5)', minWidth: '60px' }}>J{me + 1} (vous)</span>
             <div style={{ flex: 1, height: '5px', background: 'rgba(232,224,204,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${Math.max(0, (gameState.lp[p] / STARTING_LP) * 100)}%`, background: gameState.lp[p] > 3000 ? '#4cc9a8' : gameState.lp[p] > 1000 ? '#c9a84c' : '#e84c4c', transition: 'all 0.4s', borderRadius: '3px' }} />
+              <div style={{ height: '100%', width: `${Math.max(0, (gameState.lp[me] / STARTING_LP) * 100)}%`, background: gameState.lp[p] > 3000 ? '#4cc9a8' : gameState.lp[p] > 1000 ? '#c9a84c' : '#e84c4c', transition: 'all 0.4s', borderRadius: '3px' }} />
             </div>
-            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: gameState.lp[p] > 2000 ? '#4cc9a8' : '#e84c4c', minWidth: '50px', textAlign: 'right' }}>{gameState.lp[p]}</span>
-            <span style={{ fontSize: '0.65rem', color: 'rgba(201,168,76,0.35)', fontFamily: 'Rajdhani, sans-serif' }}>✋{gameState.hands[p].length} 📚{gameState.decks[p].length}</span>
+            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: gameState.lp[me] > 2000 ? '#4cc9a8' : '#e84c4c', minWidth: '50px', textAlign: 'right' }}>{gameState.lp[me]}</span>
+            <span style={{ fontSize: '0.65rem', color: 'rgba(201,168,76,0.35)', fontFamily: 'Rajdhani, sans-serif' }}>✋{gameState.hands[me].length} 📚{gameState.decks[me].length}</span>
           </div>
 
           <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'flex-end', flexShrink: 0, minHeight: '88px', paddingBottom: '2px' }}>
-            {gameState.hands[p].map((card, i) => (
+            {gameState.hands[me].map((card, i) => (
               <div key={i} onMouseEnter={() => setHoveredCard(card)} onMouseLeave={() => setHoveredCard(null)} onClick={() => handleHandCardClick(i)}
                 style={{ width: '58px', height: '80px', borderRadius: '5px', flexShrink: 0, border: gameState.selectedHandCard === i ? '2px solid #c9a84c' : '1px solid rgba(201,168,76,0.2)', background: '#141428', cursor: 'pointer', overflow: 'hidden', position: 'relative', transform: gameState.selectedHandCard === i ? 'translateY(-14px)' : 'translateY(0)', boxShadow: gameState.selectedHandCard === i ? '0 0 14px rgba(201,168,76,0.6)' : 'none', transition: 'all 0.15s' }}>
                 {card.image_url ? <img src={card.image_url} alt={card.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.3 }}>🎴</div>}
