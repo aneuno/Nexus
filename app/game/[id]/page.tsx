@@ -122,9 +122,23 @@ export default function GamePage({ params }: { params: { id: string } }) {
 
       const { data: roomData } = await supabase.from('game_rooms').select('*').eq('id', params.id).single()
       if (!roomData) { window.location.href = '/play'; return }
-      const deck1 = await loadDeckCards(roomData.host_deck_id)
-      const deck2 = await loadDeckCards(roomData.guest_deck_id)
-      startGame(deck1, deck2)
+
+      // Si une partie existe déjà, la charger directement
+      if (roomData.game_state) {
+        setGameState(roomData.game_state)
+        setLoading(false)
+        return
+      }
+
+      // Seul le host génère la partie
+      if (roomData.host_id === session.user.id) {
+        const deck1 = await loadDeckCards(roomData.host_deck_id)
+        const deck2 = await loadDeckCards(roomData.guest_deck_id)
+        const newState = buildGameState(deck1, deck2)
+        await supabase.from('game_rooms').update({ game_state: newState }).eq('id', params.id)
+        setGameState(newState)
+      }
+
       setLoading(false)
     }
     init()
@@ -175,10 +189,10 @@ export default function GamePage({ params }: { params: { id: string } }) {
     return result
   }
 
-  function startGame(deck1: CardData[], deck2: CardData[]) {
+  function buildGameState(deck1: CardData[], deck2: CardData[]): GameState {
     const s1 = shuffle(deck1), s2 = shuffle(deck2)
     const h1 = s1.splice(0, INITIAL_HAND_SIZE), h2 = s2.splice(0, INITIAL_HAND_SIZE)
-    setGameState({
+    return {
       phase: 'DRAW', turn: 1, activePlayer: 0,
       lp: [STARTING_LP, STARTING_LP],
       hands: [h1, h2],
@@ -191,7 +205,11 @@ export default function GamePage({ params }: { params: { id: string } }) {
       log: ['La partie commence !', 'Tour 1 — Joueur 1', 'Joueur 1 ne pioche pas au 1er tour'],
       selectedHandCard: null, selectedFieldCard: null, attackingCard: null,
       pendingTribute: null, pendingSummonZone: null, showSummonModal: null
-    })
+    }
+  }
+
+  function startGame(deck1: CardData[], deck2: CardData[]) {
+    setGameState(buildGameState(deck1, deck2))
   }
 
   function showMsg(msg: string) { setFlashMsg(msg); setTimeout(() => setFlashMsg(null), 2500) }
@@ -237,8 +255,8 @@ export default function GamePage({ params }: { params: { id: string } }) {
   }
 
   function doEndTurn(state: GameState): GameState {
-    if (state.lp[0] <= 0 || state.lp[1] <= 0) return state
-    const next = state.activePlayer === 0 ? 1 : 0 as 0 | 1
+    if (state.winner !== null) return state
+    const next = (state.activePlayer === 0 ? 1 : 0) as 0 | 1
     const newTurn = next === 0 ? state.turn + 1 : state.turn
     const monsterZones = state.monsterZones.map(row =>
       row.map(fc => fc ? { ...fc, justPlaced: false } : null)
@@ -250,6 +268,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
       pendingTribute: null, pendingSummonZone: null, showSummonModal: null
     }
     s = addLog(s, `--- Tour ${newTurn} — Joueur ${next + 1} ---`)
+    if (s.decks[next].length === 0) return { ...s, winner: next === 0 ? 1 : 0 as 0 | 1 }
     s = doDrawPhase(s)
     return addLog(s, `⏭ Phase : ${phaseLabel('DRAW')}`)
   }
@@ -395,8 +414,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
     showMsg('Cliquez sur le monstre adverse')
   }
 
-  if (loading) return <main style={{ minHeight: '100vh', background: '#0a0a14', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c9a84c' }}>Chargement...</main>
-  if (!gameState) return null
+  if (loading || !gameState) return <main style={{ minHeight: '100vh', background: '#0a0a14', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c9a84c' }}>Chargement de la partie...</main>
 
   const p = gameState.activePlayer
   const opp = p === 0 ? 1 : 0 as 0 | 1
@@ -420,7 +438,6 @@ export default function GamePage({ params }: { params: { id: string } }) {
           border: isSelected ? '2px solid #c9a84c' : isAttacking ? '2px solid #e84c4c' : isTarget && fc ? '2px solid #e84c4c' : isTribute ? '2px solid #ff8800' : '1px solid rgba(201,168,76,0.15)',
           background: isSelected ? 'rgba(201,168,76,0.1)' : isTarget && fc ? 'rgba(232,76,76,0.08)' : 'rgba(201,168,76,0.03)',
           cursor: 'pointer',
-          // ── CHANGEMENT 1 : overflow visible pour que les cartes horizontales dépassent ──
           overflow: 'visible',
           boxShadow: isSelected ? '0 0 12px rgba(201,168,76,0.5)' : isAttacking ? '0 0 12px rgba(232,76,76,0.5)' : 'none',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -431,27 +448,27 @@ export default function GamePage({ params }: { params: { id: string } }) {
       >
         {fc ? (
           fc.position === 'SET' ? (
-  <div style={{ width: '140px', height: '100px', position: 'absolute', borderRadius: '4px', overflow: 'hidden' }}>
-    {cardBackUrl
-      ? <img src={cardBackUrl} alt="dos" style={{ width: '100px', height: '140px', objectFit: 'cover', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(90deg)' }} />
-      : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #1a1a35, #0f0f20)', border: '1px solid rgba(201,168,76,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontSize: '1.4rem', opacity: 0.4 }}>🎴</span></div>
-    }
-  </div>
+            <div style={{ width: '140px', height: '100px', position: 'absolute', borderRadius: '4px', overflow: 'hidden' }}>
+              {cardBackUrl
+                ? <img src={cardBackUrl} alt="dos" style={{ width: '100px', height: '140px', objectFit: 'cover', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(90deg)' }} />
+                : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #1a1a35, #0f0f20)', border: '1px solid rgba(201,168,76,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ fontSize: '1.4rem', opacity: 0.4 }}>🎴</span></div>
+              }
+            </div>
           ) : fc.position === 'DEF' ? (
-<div style={{ width: '140px', height: '100px', position: 'absolute', borderRadius: '4px', overflow: 'visible' }}>
-    <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '100px', height: '140px', objectFit: 'cover', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(90deg)', borderRadius: '4px' }} />
-    <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(6,6,15,0.92)', border: '1px solid rgba(76,153,201,0.5)', borderRadius: '4px', padding: '2px 8px', display: 'flex', gap: '6px', alignItems: 'center', whiteSpace: 'nowrap' }}>
-  <span style={{ fontSize: '0.65rem', color: '#4c99c9', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>DEF</span>
-  <span style={{ fontSize: '0.72rem', color: '#e8e0cc', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>{fc.card.def}</span>
-</div>
-  </div>
+            <div style={{ width: '140px', height: '100px', position: 'absolute', borderRadius: '4px', overflow: 'visible' }}>
+              <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '100px', height: '140px', objectFit: 'cover', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(90deg)', borderRadius: '4px' }} />
+              <div style={{ position: 'absolute', bottom: '-22px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(6,6,15,0.92)', border: '1px solid rgba(76,153,201,0.5)', borderRadius: '4px', padding: '2px 8px', display: 'flex', gap: '6px', alignItems: 'center', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: '0.65rem', color: '#4c99c9', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>DEF</span>
+                <span style={{ fontSize: '0.72rem', color: '#e8e0cc', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>{fc.card.def}</span>
+              </div>
+            </div>
           ) : (
             <div style={{ width: '100px', height: '140px', flexShrink: 0, position: 'relative', overflow: 'visible', borderRadius: '4px' }}>
               <img src={fc.card.image_url || ''} alt={fc.card.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: gameState.hasAttackedThisTurn[zone] && isActive ? 0.5 : 1, borderRadius: '4px' }} />
-              <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(6,6,15,0.92)', border: '1px solid rgba(76,153,201,0.5)', borderRadius: '4px', padding: '2px 8px', display: 'flex', gap: '6px', alignItems: 'center', whiteSpace: 'nowrap' }}>
-  <span style={{ fontSize: '0.65rem', color: '#4c99c9', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>DEF</span>
-  <span style={{ fontSize: '0.72rem', color: '#e8e0cc', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>{fc.card.def}</span>
-</div>
+              <div style={{ position: 'absolute', bottom: '-22px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(6,6,15,0.92)', border: '1px solid rgba(232,76,76,0.5)', borderRadius: '4px', padding: '2px 8px', display: 'flex', gap: '6px', alignItems: 'center', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: '0.65rem', color: '#e84c4c', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>ATK</span>
+                <span style={{ fontSize: '0.72rem', color: '#e8e0cc', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>{fc.card.atk}</span>
+              </div>
               {gameState.hasAttackedThisTurn[zone] && isActive && (
                 <div style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(0,0,0,0.7)', borderRadius: '3px', padding: '1px 3px', fontSize: '0.45rem', color: 'rgba(232,224,204,0.5)' }}>ATQ✓</div>
               )}
@@ -569,11 +586,11 @@ export default function GamePage({ params }: { params: { id: string } }) {
             <FieldZone label="TERRAIN" />
           </div>
 
-          {/* TERRAIN OPP Monstres — ── CHANGEMENT 2 : gap de 50px ── */}
+          {/* TERRAIN OPP Monstres */}
           <div style={{ display: 'flex', gap: '50px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <DeckZone player={opp} />
             {gameState.monsterZones[opp].map((_, i) => <MonsterZone key={i} player={opp} zone={i} />)}
-            <div style={{ width: '72px', flexShrink: 0 }} />
+            <div style={{ width: '100px', flexShrink: 0 }} />
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, padding: '2px 0' }}>
@@ -582,7 +599,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
             <div style={{ flex: 1, height: '1px', background: 'rgba(201,168,76,0.08)' }} />
           </div>
 
-          {/* TERRAIN P Monstres — ── CHANGEMENT 2 : gap de 50px ── */}
+          {/* TERRAIN P Monstres */}
           <div style={{ display: 'flex', gap: '50px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <div style={{ width: '100px', flexShrink: 0 }} />
             {gameState.monsterZones[p].map((_, i) => <MonsterZone key={i} player={p} zone={i} />)}
@@ -590,7 +607,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
           </div>
 
           {/* TERRAIN P Magie/Piège */}
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <FieldZone label="TERRAIN" />
             {gameState.spellZones[p].map((_, i) => <SpellZone key={i} player={p} zone={i} />)}
             <GraveyardZone player={p} />
@@ -612,7 +629,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
             {gameState.attackingCard && (
               <div style={{ fontSize: '0.72rem', color: '#e84c4c', fontFamily: 'Rajdhani, sans-serif', animation: 'pulse 0.8s ease-in-out infinite' }}>
                 Cliquez sur un monstre adverse ou&nbsp;
-                <span onClick={() => setGameState(prev => prev ? doAttack(prev, prev.attackingCard!.zone, 'direct') : prev)} style={{ textDecoration: 'underline', cursor: 'pointer' }}>attaque directe</span>
+                <span onClick={() => setGameState(prev => { if (!prev) return prev; const next = doAttack(prev, prev.attackingCard!.zone, 'direct'); syncGameState(next); return next })} style={{ textDecoration: 'underline', cursor: 'pointer' }}>attaque directe</span>
               </div>
             )}
           </div>
