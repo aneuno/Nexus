@@ -154,9 +154,12 @@ export default function GamePage({ params }: { params: { id: string } }) {
         }, (payload: any) => {
           if (payload.new.game_state) {
             setGameState(payload.new.game_state)
+            setLoading(false)
           }
         })
-        .subscribe()
+        .subscribe((status) => {
+          console.log('Realtime status:', status)
+        })
       return () => { supabase.removeChannel(channel) }
     }
   }, [])
