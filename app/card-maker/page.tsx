@@ -6,19 +6,51 @@ export default function CardMaker() {
   const [name, setName] = useState('Nom de la carte')
   const [atk, setAtk] = useState('0')
   const [def, setDef] = useState('0')
-  const [effect, setEffect] = useState('Effet de la carte...')
+  const [level, setLevel] = useState('4')
+  const [rarity, setRarity] = useState('common')
+  const [effectDisplay, setEffectDisplay] = useState('Effet affiché sur la carte...')
+  const [effectDetail, setEffectDetail] = useState('Description détaillée de l\'effet pour le gameplay. Expliquez ici les mécaniques précises, les conditions d\'activation, les effets en chaîne, etc.')
   const [imageUrl, setImageUrl] = useState('')
   const [cardType, setCardType] = useState('monster')
   const [template, setTemplate] = useState('standard')
 
-  function downloadSVG() {
-    const svg = document.getElementById('card-svg')
+  async function downloadPNG() {
+    const svg = document.getElementById('card-svg') as unknown as SVGSVGElement
     if (!svg) return
-    const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' })
+    const svgData = new XMLSerializer().serializeToString(svg)
+    const canvas = document.createElement('canvas')
+    canvas.width = 560
+    canvas.height = 800
+    const ctx = canvas.getContext('2d')!
+    const img = new Image()
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, 560, 800)
+      const a = document.createElement('a')
+      a.download = `${name}.png`
+      a.href = canvas.toDataURL('image/png')
+      a.click()
+    }
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
+  }
+
+  function downloadJSON() {
+    const data = {
+      name,
+      card_type: cardType,
+      level: parseInt(level),
+      atk: parseInt(atk),
+      def: parseInt(def),
+      rarity,
+      effect: effectDisplay,
+      description: effectDetail,
+      image_url: imageUrl,
+      template
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${name}.svg`
+    a.download = `${name}.json`
     a.click()
   }
 
@@ -33,6 +65,10 @@ export default function CardMaker() {
   const typeLabel = {
     monster: 'MONSTRE', spell: 'SORT', trap: 'PIÈGE', fusion: 'FUSION', ritual: 'RITUEL'
   }[cardType] as string
+
+  const rarityColor = {
+    common: '#aaa', rare: '#4c99c9', epic: '#9b4cc9', legendary: '#c9a84c'
+  }[rarity] as string
 
   const isMonster = cardType === 'monster' || cardType === 'fusion' || cardType === 'ritual'
 
@@ -117,9 +153,14 @@ export default function CardMaker() {
         }
         .template-btn.active { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.6); color: #c9a84c; }
         .template-btn:hover { border-color: rgba(201,168,76,0.4); color: #e8e0cc; }
+        .section-title {
+          font-size: 0.65rem; color: rgba(201,168,76,0.35); letter-spacing: 0.15em;
+          text-transform: uppercase; margin: 14px 0 10px; padding-bottom: 6px;
+          border-bottom: 1px solid rgba(201,168,76,0.1);
+        }
       `}</style>
 
-      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
           <a href="/" style={{ fontSize: '0.8rem', color: 'rgba(201,168,76,0.5)', textDecoration: 'none' }}>← Retour</a>
           <h1 style={{ fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '1.2rem', letterSpacing: '0.1em' }}>Card Maker</h1>
@@ -128,7 +169,9 @@ export default function CardMaker() {
         <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
           {/* FORMULAIRE */}
-          <div style={{ flex: 1, minWidth: '260px', background: '#0f0f1e', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '20px' }}>
+          <div style={{ flex: 1, minWidth: '280px', background: '#0f0f1e', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '20px' }}>
+
+            <div className="section-title">Visuel</div>
 
             <label>Template</label>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
@@ -145,21 +188,26 @@ export default function CardMaker() {
               <option value="ritual">Rituel</option>
             </select>
 
+            <label>Rareté</label>
+            <select value={rarity} onChange={e => setRarity(e.target.value)} className="input-field">
+              <option value="common">Common</option>
+              <option value="rare">Rare</option>
+              <option value="epic">Epic</option>
+              <option value="legendary">Legendary</option>
+            </select>
+
             <label>Nom de la carte</label>
             <input className="input-field" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Goku Ultra Instinct" />
 
             <label>URL illustration (Cloudinary)</label>
             <input className="input-field" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://res.cloudinary.com/..." />
 
-            {template === 'standard' && (
-              <>
-                <label>Effet / Description</label>
-                <textarea className="input-field" value={effect} onChange={e => setEffect(e.target.value)} rows={4} placeholder="Description ou effet de la carte..." style={{ resize: 'vertical' }} />
-              </>
-            )}
-
             {isMonster && (
               <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ flex: 1 }}>
+                  <label>Niveau</label>
+                  <input className="input-field" value={level} onChange={e => setLevel(e.target.value)} placeholder="4" type="number" min="1" max="12" />
+                </div>
                 <div style={{ flex: 1 }}>
                   <label>ATK</label>
                   <input className="input-field" value={atk} onChange={e => setAtk(e.target.value)} placeholder="2500" />
@@ -171,9 +219,55 @@ export default function CardMaker() {
               </div>
             )}
 
-            <button onClick={downloadSVG} style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '4px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', marginTop: '8px', fontFamily: 'Cinzel, serif', letterSpacing: '0.1em' }}>
-              Télécharger SVG
-            </button>
+            <div className="section-title">Effets</div>
+
+            <label>Effet affiché sur la carte</label>
+            <div style={{ fontSize: '0.68rem', color: 'rgba(232,224,204,0.3)', marginBottom: '6px' }}>Texte court visible directement sur la carte (max ~240 caractères)</div>
+            <textarea
+              className="input-field"
+              value={effectDisplay}
+              onChange={e => setEffectDisplay(e.target.value)}
+              rows={3}
+              placeholder="Ex: Inflige 500 dégâts à l'adversaire..."
+              style={{ resize: 'vertical' }}
+            />
+            <div style={{ fontSize: '0.65rem', color: effectDisplay.length > 240 ? '#e84c4c' : 'rgba(201,168,76,0.3)', marginTop: '-8px', marginBottom: '10px', textAlign: 'right' }}>
+              {effectDisplay.length}/240
+            </div>
+
+            <label>Effet détaillé (gameplay)</label>
+            <div style={{ fontSize: '0.68rem', color: 'rgba(232,224,204,0.3)', marginBottom: '6px' }}>Description complète des mécaniques — visible en cliquant sur la carte en jeu</div>
+            <textarea
+              className="input-field"
+              value={effectDetail}
+              onChange={e => setEffectDetail(e.target.value)}
+              rows={5}
+              placeholder="Ex: Une fois par tour, durant votre Main Phase : vous pouvez cibler 1 monstre que contrôle votre adversaire ; détruisez-le. Si cette carte détruit un monstre au combat et l'envoie au Cimetière : vous pouvez piocher 1 carte."
+              style={{ resize: 'vertical' }}
+            />
+
+            <div className="section-title">Export</div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={downloadPNG}
+                style={{ flex: 1, padding: '11px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '4px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'Cinzel, serif', letterSpacing: '0.08em' }}
+              >
+                🖼 PNG
+              </button>
+              <button
+                onClick={downloadJSON}
+                style={{ flex: 1, padding: '11px', background: 'rgba(76,153,201,0.1)', color: '#4c99c9', border: '1px solid rgba(76,153,201,0.4)', borderRadius: '4px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'Cinzel, serif', letterSpacing: '0.08em' }}
+              >
+                {'{ }'} JSON
+              </button>
+            </div>
+
+            {rarity !== 'common' && (
+              <div style={{ marginTop: '10px', padding: '8px 12px', background: `rgba(${rarity === 'rare' ? '76,153,201' : rarity === 'epic' ? '155,76,201' : '201,168,76'},0.08)`, border: `1px solid ${rarityColor}40`, borderRadius: '4px', fontSize: '0.68rem', color: rarityColor }}>
+                ✦ {rarity.charAt(0).toUpperCase() + rarity.slice(1)} — cette rareté sera incluse dans le JSON
+              </div>
+            )}
           </div>
 
           {/* PREVIEW */}
@@ -214,11 +308,11 @@ export default function CardMaker() {
                 <circle cx="160" cy="274" r="1.5" fill="#c9a84c" opacity="0.25"/>
                 <rect x="14" y="280" width="252" height="70" rx="4" fill="rgba(201,168,76,0.02)" stroke="rgba(201,168,76,0.12)" strokeWidth="1"/>
                 <text fontFamily="sans-serif" fontSize="8" fill="rgba(232,224,204,0.7)">
-                  <tspan x="22" y="294">{effect.substring(0, 48)}</tspan>
-                  <tspan x="22" dy="11">{effect.substring(48, 96)}</tspan>
-                  <tspan x="22" dy="11">{effect.substring(96, 144)}</tspan>
-                  <tspan x="22" dy="11">{effect.substring(144, 192)}</tspan>
-                  <tspan x="22" dy="11">{effect.substring(192, 240)}</tspan>
+                  <tspan x="22" y="294">{effectDisplay.substring(0, 48)}</tspan>
+                  <tspan x="22" dy="11">{effectDisplay.substring(48, 96)}</tspan>
+                  <tspan x="22" dy="11">{effectDisplay.substring(96, 144)}</tspan>
+                  <tspan x="22" dy="11">{effectDisplay.substring(144, 192)}</tspan>
+                  <tspan x="22" dy="11">{effectDisplay.substring(192, 240)}</tspan>
                 </text>
                 <line x1="18" y1="355" x2="262" y2="355" stroke="rgba(201,168,76,0.3)" strokeWidth="1"/>
                 <circle cx="140" cy="355" r="3" fill="#c9a84c" opacity="0.5"/>
@@ -243,39 +337,22 @@ export default function CardMaker() {
             {template === 'fullart' && (
               <svg id="card-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 400" width="280" height="400">
                 {sharedDefs}
-
-                {/* Fond noir si pas d'image */}
                 <rect width="280" height="400" rx="12" fill="url(#bgGrad)"/>
-
-                {/* Illustration plein cadre */}
                 {imageUrl && (
                   <image href={imageUrl} x="2" y="2" width="276" height="396" clipPath="url(#fullArtClip)" preserveAspectRatio="xMidYMid slice"/>
                 )}
-
-                {/* Dégradé subtil en bas pour les stats */}
                 {isMonster && (
                   <rect x="2" y="300" width="276" height="98" rx="0" fill="url(#fadeBottom)"/>
                 )}
-
-                {/* Bordure dorée extérieure */}
                 <rect x="2" y="2" width="276" height="396" rx="11" fill="none" stroke="url(#borderGrad)" strokeWidth="3" filter="url(#glow)"/>
-
-                {/* Bordure intérieure fine */}
                 <rect x="8" y="8" width="264" height="384" rx="8" fill="none" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
-
                 {corners}
-
-                {/* Nom — fond semi-transparent */}
                 <rect x="14" y="14" width="252" height="32" rx="5" fill="rgba(10,10,20,0.45)" stroke="rgba(201,168,76,0.5)" strokeWidth="1"/>
                 <text x="140" y="35" textAnchor="middle" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)" letterSpacing="1">
                   {name.length > 22 ? name.substring(0, 22) + '...' : name}
                 </text>
-
-                {/* Badge type — semi-transparent */}
                 <rect x="14" y="50" width="60" height="16" rx="3" fill="rgba(10,10,20,0.45)" stroke={typeColor} strokeWidth="0.8" strokeOpacity="0.7"/>
                 <text x="44" y="61" textAnchor="middle" fontFamily="sans-serif" fontSize="8" letterSpacing="0.5" fill={typeColor} filter="url(#textShadow)">{typeLabel}</text>
-
-                {/* Stats monstres en bas — semi-transparentes */}
                 {isMonster && (
                   <>
                     <line x1="18" y1="358" x2="262" y2="358" stroke="rgba(201,168,76,0.5)" strokeWidth="1"/>
@@ -288,8 +365,6 @@ export default function CardMaker() {
                     <text x="258" y="382" textAnchor="end" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c" filter="url(#glow)">{def}</text>
                   </>
                 )}
-
-                {/* Sorts et pièges — juste le type en bas */}
                 {!isMonster && (
                   <text x="140" y="385" textAnchor="middle" fontFamily="serif" fontSize="10" fill="rgba(201,168,76,0.6)" letterSpacing="2" filter="url(#textShadow)">
                     {cardType === 'spell' ? '✦ CARTE SORT ✦' : '✦ CARTE PIÈGE ✦'}
@@ -297,6 +372,16 @@ export default function CardMaker() {
                 )}
               </svg>
             )}
+
+            {/* APERÇU EFFET DÉTAILLÉ */}
+            <div style={{ width: '280px', background: '#0f0f1e', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '14px' }}>
+              <div style={{ fontSize: '0.62rem', color: 'rgba(201,168,76,0.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                Effet détaillé (popup en jeu)
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(232,224,204,0.7)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                {effectDetail || <span style={{ color: 'rgba(201,168,76,0.2)', fontStyle: 'italic' }}>Aucun effet détaillé...</span>}
+              </div>
+            </div>
           </div>
         </div>
       </div>
