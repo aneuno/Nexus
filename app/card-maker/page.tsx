@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 export default function CardMaker() {
   const [name, setName] = useState('Nom de la carte')
@@ -10,19 +10,38 @@ export default function CardMaker() {
   const [rarity, setRarity] = useState('common')
   const [effectDisplay, setEffectDisplay] = useState('Effet affiché sur la carte...')
   const [effectDetail, setEffectDetail] = useState('Description détaillée de l\'effet pour le gameplay.')
-  const [imageUrl, setImageUrl] = useState('')
+  const [imageBase64, setImageBase64] = useState('')
   const [cardType, setCardType] = useState('monster')
   const [template, setTemplate] = useState('standard')
+  const [cloudinaryUrl, setCloudinaryUrl] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  function downloadSVG() {
-    const svg = document.getElementById('card-svg')
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setImageBase64(reader.result as string)
+    reader.readAsDataURL(file)
+  }
+
+  function downloadPNG() {
+    const svg = document.getElementById('card-svg') as SVGSVGElement | null
     if (!svg) return
-    const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${name}.svg`
-    a.click()
+    const svgData = new XMLSerializer().serializeToString(svg)
+    const canvas = document.createElement('canvas')
+    canvas.width = 560
+    canvas.height = 800
+    const ctx = canvas.getContext('2d')!
+    const img = new Image()
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, 560, 800)
+      const a = document.createElement('a')
+      a.download = `${name}.png`
+      a.href = canvas.toDataURL('image/png')
+      a.click()
+    }
+    const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
+    img.src = URL.createObjectURL(blob)
   }
 
   function downloadJSON() {
@@ -35,7 +54,7 @@ export default function CardMaker() {
       rarity,
       effect: effectDisplay,
       description: effectDetail,
-      image_url: imageUrl,
+      image_url: cloudinaryUrl,
       template
     }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
@@ -126,6 +145,8 @@ export default function CardMaker() {
     </>
   )
 
+  const imageSource = imageBase64
+
   return (
     <main style={{ minHeight: '100vh', background: '#0a0a14', color: '#e8e0cc', fontFamily: 'sans-serif', padding: '20px' }}>
       <style>{`
@@ -150,6 +171,13 @@ export default function CardMaker() {
           text-transform: uppercase; margin: 14px 0 10px; padding-bottom: 6px;
           border-bottom: 1px solid rgba(201,168,76,0.1);
         }
+        .upload-btn {
+          width: 100%; padding: 10px; background: rgba(201,168,76,0.05);
+          border: 1px dashed rgba(201,168,76,0.3); border-radius: 4px;
+          color: rgba(201,168,76,0.6); font-size: 0.82rem; cursor: pointer;
+          text-align: center; margin-bottom: 10px; transition: all 0.2s;
+        }
+        .upload-btn:hover { border-color: rgba(201,168,76,0.6); color: #c9a84c; background: rgba(201,168,76,0.08); }
       `}</style>
 
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
@@ -191,8 +219,21 @@ export default function CardMaker() {
             <label>Nom de la carte</label>
             <input className="input-field" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Goku Ultra Instinct" />
 
-            <label>URL illustration (Cloudinary)</label>
-            <input className="input-field" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://res.cloudinary.com/..." />
+            <label>Illustration</label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              style={{ display: 'none' }}
+            />
+            <div className="upload-btn" onClick={() => fileInputRef.current?.click()}>
+              {imageBase64 ? '✓ Image chargée — cliquer pour changer' : '+ Choisir une image'}
+            </div>
+
+            <label>URL Cloudinary (pour le JSON)</label>
+            <div style={{ fontSize: '0.68rem', color: 'rgba(232,224,204,0.3)', marginBottom: '6px' }}>Après avoir uploadé le PNG sur Cloudinary, colle l'URL ici</div>
+            <input className="input-field" value={cloudinaryUrl} onChange={e => setCloudinaryUrl(e.target.value)} placeholder="https://res.cloudinary.com/..." />
 
             {isMonster && (
               <div style={{ display: 'flex', gap: '10px' }}>
@@ -242,10 +283,10 @@ export default function CardMaker() {
 
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
-                onClick={downloadSVG}
+                onClick={downloadPNG}
                 style={{ flex: 1, padding: '11px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '4px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'Cinzel, serif', letterSpacing: '0.08em' }}
               >
-                🖼 SVG
+                🖼 PNG
               </button>
               <button
                 onClick={downloadJSON}
@@ -283,14 +324,14 @@ export default function CardMaker() {
                 <rect x="14" y="50" width="60" height="16" rx="3" fill={typeBg} stroke={typeColor} strokeWidth="0.5" strokeOpacity="0.4"/>
                 <text x="44" y="61" textAnchor="middle" fontFamily="sans-serif" fontSize="8" letterSpacing="0.5" fill={typeColor}>{typeLabel}</text>
                 <rect x="18" y="70" width="244" height="200" rx="4" fill="rgba(255,255,255,0.02)" stroke="rgba(201,168,76,0.2)" strokeWidth="1"/>
-                {imageUrl ? (
-                  <image href={imageUrl} x="18" y="70" width="244" height="200" clipPath="url(#artClip)" preserveAspectRatio="xMidYMid slice"/>
+                {imageSource ? (
+                  <image href={imageSource} x="18" y="70" width="244" height="200" clipPath="url(#artClip)" preserveAspectRatio="xMidYMid slice"/>
                 ) : (
                   <>
                     <circle cx="140" cy="170" r="55" fill="none" stroke="rgba(201,168,76,0.06)" strokeWidth="1"/>
                     <circle cx="140" cy="170" r="38" fill="none" stroke="rgba(155,76,201,0.05)" strokeWidth="1"/>
                     <text x="140" y="165" textAnchor="middle" fontFamily="sans-serif" fontSize="10" fill="rgba(201,168,76,0.2)">ILLUSTRATION</text>
-                    <text x="140" y="180" textAnchor="middle" fontFamily="sans-serif" fontSize="8" fill="rgba(201,168,76,0.15)">Colle une URL Cloudinary</text>
+                    <text x="140" y="180" textAnchor="middle" fontFamily="sans-serif" fontSize="8" fill="rgba(201,168,76,0.15)">Choisir une image</text>
                   </>
                 )}
                 <line x1="18" y1="274" x2="262" y2="274" stroke="rgba(201,168,76,0.3)" strokeWidth="1"/>
@@ -328,8 +369,8 @@ export default function CardMaker() {
               <svg id="card-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 400" width="280" height="400">
                 {sharedDefs}
                 <rect width="280" height="400" rx="12" fill="url(#bgGrad)"/>
-                {imageUrl && (
-                  <image href={imageUrl} x="2" y="2" width="276" height="396" clipPath="url(#fullArtClip)" preserveAspectRatio="xMidYMid slice"/>
+                {imageSource && (
+                  <image href={imageSource} x="2" y="2" width="276" height="396" clipPath="url(#fullArtClip)" preserveAspectRatio="xMidYMid slice"/>
                 )}
                 {isMonster && (
                   <rect x="2" y="300" width="276" height="98" rx="0" fill="url(#fadeBottom)"/>
