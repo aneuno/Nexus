@@ -9,11 +9,11 @@ export default function CardMaker() {
   const [level, setLevel] = useState('4')
   const [rarity, setRarity] = useState('common')
   const [effectDisplay, setEffectDisplay] = useState('Effet affiché sur la carte...')
-  const [effectDetail, setEffectDetail] = useState('Description détaillée de l\'effet pour le gameplay.')
+  const [effectDetail, setEffectDetail] = useState("Description détaillée de l'effet pour le gameplay.")
   const [imageBase64, setImageBase64] = useState('')
+  const [cloudinaryUrl, setCloudinaryUrl] = useState('')
   const [cardType, setCardType] = useState('monster')
   const [template, setTemplate] = useState('standard')
-  const [cloudinaryUrl, setCloudinaryUrl] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -24,29 +24,18 @@ export default function CardMaker() {
     reader.readAsDataURL(file)
   }
 
-  function downloadPNG() {
-    if (typeof window === 'undefined') return
-    const svg = document.getElementById('card-svg') as SVGSVGElement | null
+  function downloadSVG() {
+    const svg = document.getElementById('card-svg')
     if (!svg) return
-    const svgData = new XMLSerializer().serializeToString(svg)
-    const canvas = document.createElement('canvas')
-    canvas.width = 560
-    canvas.height = 800
-    const ctx = canvas.getContext('2d')!
-    const img = new Image()
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, 560, 800)
-      const a = document.createElement('a')
-      a.download = `${name}.png`
-      a.href = canvas.toDataURL('image/png')
-      a.click()
-    }
-    const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
-    img.src = URL.createObjectURL(blob)
+    const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${name}.svg`
+    a.click()
   }
 
   function downloadJSON() {
-    if (typeof window === 'undefined') return
     const data = {
       name,
       card_type: cardType,
@@ -67,22 +56,10 @@ export default function CardMaker() {
     a.click()
   }
 
-  const typeColor = {
-    monster: '#c9a84c', spell: '#4cc94c', trap: '#c94ca8', fusion: '#9b4cc9', ritual: '#4ca8c9'
-  }[cardType] as string
-
-  const typeBg = {
-    monster: 'rgba(201,168,76,0.15)', spell: 'rgba(76,201,76,0.2)', trap: 'rgba(201,76,168,0.2)', fusion: 'rgba(155,76,201,0.2)', ritual: 'rgba(76,168,201,0.2)'
-  }[cardType] as string
-
-  const typeLabel = {
-    monster: 'MONSTRE', spell: 'SORT', trap: 'PIÈGE', fusion: 'FUSION', ritual: 'RITUEL'
-  }[cardType] as string
-
-  const rarityColor = {
-    common: '#aaa', rare: '#4c99c9', epic: '#9b4cc9', legendary: '#c9a84c'
-  }[rarity] as string
-
+  const typeColor = { monster: '#c9a84c', spell: '#4cc94c', trap: '#c94ca8', fusion: '#9b4cc9', ritual: '#4ca8c9' }[cardType] as string
+  const typeBg = { monster: 'rgba(201,168,76,0.15)', spell: 'rgba(76,201,76,0.2)', trap: 'rgba(201,76,168,0.2)', fusion: 'rgba(155,76,201,0.2)', ritual: 'rgba(76,168,201,0.2)' }[cardType] as string
+  const typeLabel = { monster: 'MONSTRE', spell: 'SORT', trap: 'PIÈGE', fusion: 'FUSION', ritual: 'RITUEL' }[cardType] as string
+  const rarityColor = { common: '#aaa', rare: '#4c99c9', epic: '#9b4cc9', legendary: '#c9a84c' }[rarity] as string
   const isMonster = cardType === 'monster' || cardType === 'fusion' || cardType === 'ritual'
 
   const sharedDefs = (
@@ -147,38 +124,18 @@ export default function CardMaker() {
     </>
   )
 
-  const imageSource = imageBase64
-
   return (
     <main style={{ minHeight: '100vh', background: '#0a0a14', color: '#e8e0cc', fontFamily: 'sans-serif', padding: '20px' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap');
-        .input-field {
-          width: 100%; padding: 8px 12px; background: #141428;
-          border: 1px solid rgba(201,168,76,0.3); border-radius: 4px;
-          color: #e8e0cc; font-size: 0.88rem; box-sizing: border-box; margin-bottom: 10px;
-        }
+        .input-field { width: 100%; padding: 8px 12px; background: #141428; border: 1px solid rgba(201,168,76,0.3); border-radius: 4px; color: #e8e0cc; font-size: 0.88rem; box-sizing: border-box; margin-bottom: 10px; }
         .input-field:focus { outline: none; border-color: rgba(201,168,76,0.7); }
         label { display: block; font-size: 0.72rem; color: rgba(201,168,76,0.6); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
-        .template-btn {
-          flex: 1; padding: 8px; background: transparent;
-          border: 1px solid rgba(201,168,76,0.2); border-radius: 4px;
-          color: rgba(232,224,204,0.5); font-size: 0.78rem; cursor: pointer;
-          transition: all 0.2s; letter-spacing: 0.05em;
-        }
+        .template-btn { flex: 1; padding: 8px; background: transparent; border: 1px solid rgba(201,168,76,0.2); border-radius: 4px; color: rgba(232,224,204,0.5); font-size: 0.78rem; cursor: pointer; transition: all 0.2s; letter-spacing: 0.05em; }
         .template-btn.active { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.6); color: #c9a84c; }
         .template-btn:hover { border-color: rgba(201,168,76,0.4); color: #e8e0cc; }
-        .section-title {
-          font-size: 0.65rem; color: rgba(201,168,76,0.35); letter-spacing: 0.15em;
-          text-transform: uppercase; margin: 14px 0 10px; padding-bottom: 6px;
-          border-bottom: 1px solid rgba(201,168,76,0.1);
-        }
-        .upload-btn {
-          width: 100%; padding: 10px; background: rgba(201,168,76,0.05);
-          border: 1px dashed rgba(201,168,76,0.3); border-radius: 4px;
-          color: rgba(201,168,76,0.6); font-size: 0.82rem; cursor: pointer;
-          text-align: center; margin-bottom: 10px; transition: all 0.2s;
-        }
+        .section-title { font-size: 0.65rem; color: rgba(201,168,76,0.35); letter-spacing: 0.15em; text-transform: uppercase; margin: 14px 0 10px; padding-bottom: 6px; border-bottom: 1px solid rgba(201,168,76,0.1); }
+        .upload-btn { width: 100%; padding: 10px; background: rgba(201,168,76,0.05); border: 1px dashed rgba(201,168,76,0.3); border-radius: 4px; color: rgba(201,168,76,0.6); font-size: 0.82rem; cursor: pointer; text-align: center; margin-bottom: 10px; transition: all 0.2s; }
         .upload-btn:hover { border-color: rgba(201,168,76,0.6); color: #c9a84c; background: rgba(201,168,76,0.08); }
       `}</style>
 
@@ -190,7 +147,6 @@ export default function CardMaker() {
 
         <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
-          {/* FORMULAIRE */}
           <div style={{ flex: 1, minWidth: '280px', background: '#0f0f1e', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '20px' }}>
 
             <div className="section-title">Visuel</div>
@@ -222,19 +178,13 @@ export default function CardMaker() {
             <input className="input-field" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Goku Ultra Instinct" />
 
             <label>Illustration</label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              style={{ display: 'none' }}
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
             <div className="upload-btn" onClick={() => fileInputRef.current?.click()}>
               {imageBase64 ? '✓ Image chargée — cliquer pour changer' : '+ Choisir une image'}
             </div>
 
             <label>URL Cloudinary (pour le JSON)</label>
-            <div style={{ fontSize: '0.68rem', color: 'rgba(232,224,204,0.3)', marginBottom: '6px' }}>Après avoir uploadé le PNG sur Cloudinary, colle l'URL ici</div>
+            <div style={{ fontSize: '0.68rem', color: 'rgba(232,224,204,0.3)', marginBottom: '6px' }}>Après avoir uploadé le SVG sur Cloudinary, colle l'URL ici</div>
             <input className="input-field" value={cloudinaryUrl} onChange={e => setCloudinaryUrl(e.target.value)} placeholder="https://res.cloudinary.com/..." />
 
             {isMonster && (
@@ -258,42 +208,22 @@ export default function CardMaker() {
 
             <label>Effet affiché sur la carte</label>
             <div style={{ fontSize: '0.68rem', color: 'rgba(232,224,204,0.3)', marginBottom: '6px' }}>Texte court visible directement sur la carte (max ~240 caractères)</div>
-            <textarea
-              className="input-field"
-              value={effectDisplay}
-              onChange={e => setEffectDisplay(e.target.value)}
-              rows={3}
-              placeholder="Ex: Inflige 500 dégâts à l'adversaire..."
-              style={{ resize: 'vertical' }}
-            />
+            <textarea className="input-field" value={effectDisplay} onChange={e => setEffectDisplay(e.target.value)} rows={3} placeholder="Ex: Inflige 500 dégâts à l'adversaire..." style={{ resize: 'vertical' }} />
             <div style={{ fontSize: '0.65rem', color: effectDisplay.length > 240 ? '#e84c4c' : 'rgba(201,168,76,0.3)', marginTop: '-8px', marginBottom: '10px', textAlign: 'right' }}>
               {effectDisplay.length}/240
             </div>
 
             <label>Effet détaillé (gameplay)</label>
             <div style={{ fontSize: '0.68rem', color: 'rgba(232,224,204,0.3)', marginBottom: '6px' }}>Description complète — visible en cliquant sur la carte en jeu</div>
-            <textarea
-              className="input-field"
-              value={effectDetail}
-              onChange={e => setEffectDetail(e.target.value)}
-              rows={5}
-              placeholder="Ex: Une fois par tour, durant votre Main Phase..."
-              style={{ resize: 'vertical' }}
-            />
+            <textarea className="input-field" value={effectDetail} onChange={e => setEffectDetail(e.target.value)} rows={5} placeholder="Ex: Une fois par tour, durant votre Main Phase..." style={{ resize: 'vertical' }} />
 
             <div className="section-title">Export</div>
 
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={downloadPNG}
-                style={{ flex: 1, padding: '11px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '4px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'Cinzel, serif', letterSpacing: '0.08em' }}
-              >
-                🖼 PNG
+              <button onClick={downloadSVG} style={{ flex: 1, padding: '11px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '4px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'Cinzel, serif', letterSpacing: '0.08em' }}>
+                🖼 SVG
               </button>
-              <button
-                onClick={downloadJSON}
-                style={{ flex: 1, padding: '11px', background: 'rgba(76,153,201,0.1)', color: '#4c99c9', border: '1px solid rgba(76,153,201,0.4)', borderRadius: '4px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'Cinzel, serif', letterSpacing: '0.08em' }}
-              >
+              <button onClick={downloadJSON} style={{ flex: 1, padding: '11px', background: 'rgba(76,153,201,0.1)', color: '#4c99c9', border: '1px solid rgba(76,153,201,0.4)', borderRadius: '4px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'Cinzel, serif', letterSpacing: '0.08em' }}>
                 {'{ }'} JSON
               </button>
             </div>
@@ -305,7 +235,6 @@ export default function CardMaker() {
             )}
           </div>
 
-          {/* PREVIEW */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
             <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
               Aperçu — {template === 'standard' ? 'Standard' : 'Full Art'}
@@ -326,8 +255,8 @@ export default function CardMaker() {
                 <rect x="14" y="50" width="60" height="16" rx="3" fill={typeBg} stroke={typeColor} strokeWidth="0.5" strokeOpacity="0.4"/>
                 <text x="44" y="61" textAnchor="middle" fontFamily="sans-serif" fontSize="8" letterSpacing="0.5" fill={typeColor}>{typeLabel}</text>
                 <rect x="18" y="70" width="244" height="200" rx="4" fill="rgba(255,255,255,0.02)" stroke="rgba(201,168,76,0.2)" strokeWidth="1"/>
-                {imageSource ? (
-                  <image href={imageSource} x="18" y="70" width="244" height="200" clipPath="url(#artClip)" preserveAspectRatio="xMidYMid slice"/>
+                {imageBase64 ? (
+                  <image href={imageBase64} x="18" y="70" width="244" height="200" clipPath="url(#artClip)" preserveAspectRatio="xMidYMid slice"/>
                 ) : (
                   <>
                     <circle cx="140" cy="170" r="55" fill="none" stroke="rgba(201,168,76,0.06)" strokeWidth="1"/>
@@ -371,11 +300,11 @@ export default function CardMaker() {
               <svg id="card-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 400" width="280" height="400">
                 {sharedDefs}
                 <rect width="280" height="400" rx="12" fill="url(#bgGrad)"/>
-                {imageSource && (
-                  <image href={imageSource} x="2" y="2" width="276" height="396" clipPath="url(#fullArtClip)" preserveAspectRatio="xMidYMid slice"/>
+                {imageBase64 && (
+                  <image href={imageBase64} x="2" y="2" width="276" height="396" clipPath="url(#fullArtClip)" preserveAspectRatio="xMidYMid slice"/>
                 )}
                 {isMonster && (
-                  <rect x="2" y="300" width="276" height="98" rx="0" fill="url(#fadeBottom)"/>
+                  <rect x="2" y="300" width="276" height="98" fill="url(#fadeBottom)"/>
                 )}
                 <rect x="2" y="2" width="276" height="396" rx="11" fill="none" stroke="url(#borderGrad)" strokeWidth="3" filter="url(#glow)"/>
                 <rect x="8" y="8" width="264" height="384" rx="8" fill="none" stroke="rgba(201,168,76,0.4)" strokeWidth="1"/>
@@ -406,7 +335,6 @@ export default function CardMaker() {
               </svg>
             )}
 
-            {/* APERÇU EFFET DÉTAILLÉ */}
             <div style={{ width: '280px', background: '#0f0f1e', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '14px' }}>
               <div style={{ fontSize: '0.62rem', color: 'rgba(201,168,76,0.5)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '8px' }}>
                 Effet détaillé (popup en jeu)
