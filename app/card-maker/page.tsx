@@ -14,14 +14,27 @@ export default function CardMaker() {
   const [cloudinaryUrl, setCloudinaryUrl] = useState('')
   const [cardType, setCardType] = useState('monster')
   const [template, setTemplate] = useState('standard')
+  const [showImageModal, setShowImageModal] = useState(false)
+  const [urlInput, setUrlInput] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = () => setImageBase64(reader.result as string)
+    reader.onload = () => {
+      setImageBase64(reader.result as string)
+      setShowImageModal(false)
+    }
     reader.readAsDataURL(file)
+  }
+
+  function handleUrlConfirm() {
+    if (!urlInput.trim()) return
+    setImageBase64(urlInput.trim())
+    setCloudinaryUrl(urlInput.trim())
+    setUrlInput('')
+    setShowImageModal(false)
   }
 
   function downloadPNG() {
@@ -141,11 +154,55 @@ export default function CardMaker() {
         .input-field:focus { outline: none; border-color: rgba(201,168,76,0.7); }
         label { display: block; font-size: 0.72rem; color: rgba(201,168,76,0.6); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
         .section-title { font-size: 0.65rem; color: rgba(201,168,76,0.35); letter-spacing: 0.15em; text-transform: uppercase; margin: 14px 0 10px; padding-bottom: 6px; border-bottom: 1px solid rgba(201,168,76,0.1); }
-        .upload-btn { width: 100%; padding: 10px; background: rgba(201,168,76,0.05); border: 1px dashed rgba(201,168,76,0.3); border-radius: 4px; color: rgba(201,168,76,0.6); font-size: 0.82rem; cursor: pointer; text-align: center; margin-bottom: 10px; transition: all 0.2s; box-sizing: border-box; }
-        .upload-btn:hover { border-color: rgba(201,168,76,0.6); color: #c9a84c; }
         .template-btn { flex: 1; padding: 8px; background: transparent; border: 1px solid rgba(201,168,76,0.2); border-radius: 4px; color: rgba(232,224,204,0.5); font-size: 0.78rem; cursor: pointer; transition: all 0.2s; }
         .template-btn.active { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.6); color: #c9a84c; }
       `}</style>
+
+      {/* MODAL IMAGE */}
+      {showImageModal && (
+        <div onClick={() => setShowImageModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#0f0f1e', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '12px', padding: '28px', maxWidth: '380px', width: '100%' }}>
+            <div style={{ fontFamily: 'Cinzel, serif', color: '#c9a84c', fontSize: '0.9rem', marginBottom: '20px', letterSpacing: '0.1em' }}>Choisir une illustration</div>
+
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={{ width: '100%', padding: '14px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '6px', color: '#c9a84c', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', cursor: 'pointer', marginBottom: '16px' }}
+            >
+              📁 Importer depuis le PC
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(201,168,76,0.15)' }} />
+              <span style={{ fontSize: '0.65rem', color: 'rgba(201,168,76,0.35)' }}>OU</span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(201,168,76,0.15)' }} />
+            </div>
+
+            <label>Lien de l'image</label>
+            <input
+              className="input-field"
+              value={urlInput}
+              onChange={e => setUrlInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleUrlConfirm()}
+              placeholder="https://res.cloudinary.com/... ou autre lien"
+            />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setShowImageModal(false)}
+                style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '6px', color: 'rgba(232,224,204,0.4)', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif' }}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleUrlConfirm}
+                style={{ flex: 1, padding: '10px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', border: 'none', borderRadius: '6px', color: '#0a0a14', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', cursor: 'pointer', fontWeight: 600 }}
+              >
+                Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
@@ -186,10 +243,12 @@ export default function CardMaker() {
             <input className="input-field" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Goku Ultra Instinct" />
 
             <label>Illustration</label>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
-            <div className="upload-btn" onClick={() => fileInputRef.current?.click()}>
-              {imageBase64 ? '✓ Image chargée — cliquer pour changer' : '+ Choisir une image depuis le PC'}
-            </div>
+            <button
+              onClick={() => setShowImageModal(true)}
+              style={{ width: '100%', padding: '10px', background: imageBase64 ? 'rgba(201,168,76,0.08)' : 'rgba(201,168,76,0.03)', border: `1px solid ${imageBase64 ? 'rgba(201,168,76,0.5)' : 'rgba(201,168,76,0.2)'}`, borderRadius: '4px', color: imageBase64 ? '#c9a84c' : 'rgba(201,168,76,0.4)', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.88rem', cursor: 'pointer', marginBottom: '10px', transition: 'all 0.2s' }}
+            >
+              {imageBase64 ? '✓ Image définie — cliquer pour changer' : '🖼 Image'}
+            </button>
 
             {isMonster && (
               <div style={{ display: 'flex', gap: '10px' }}>
@@ -269,7 +328,7 @@ export default function CardMaker() {
                   <>
                     <circle cx="140" cy="170" r="55" fill="none" stroke="rgba(201,168,76,0.06)" strokeWidth="1"/>
                     <text x="140" y="165" textAnchor="middle" fontFamily="sans-serif" fontSize="10" fill="rgba(201,168,76,0.2)">ILLUSTRATION</text>
-                    <text x="140" y="180" textAnchor="middle" fontFamily="sans-serif" fontSize="8" fill="rgba(201,168,76,0.15)">Choisir une image</text>
+                    <text x="140" y="180" textAnchor="middle" fontFamily="sans-serif" fontSize="8" fill="rgba(201,168,76,0.15)">Cliquer sur Image</text>
                   </>
                 )}
                 <line x1="18" y1="274" x2="262" y2="274" stroke="rgba(201,168,76,0.3)" strokeWidth="1"/>
