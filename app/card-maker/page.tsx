@@ -9,28 +9,56 @@ export default function CardMaker() {
   const [level, setLevel] = useState('4')
   const [rarity, setRarity] = useState('common')
   const [effectDisplay, setEffectDisplay] = useState('Effet affiché sur la carte...')
-  const [effectDetail, setEffectDetail] = useState('Description détaillée de l\'effet pour le gameplay. Expliquez ici les mécaniques précises, les conditions d\'activation, les effets en chaîne, etc.')
+  const [effectDetail, setEffectDetail] = useState('Description détaillée de l\'effet pour le gameplay.')
   const [imageUrl, setImageUrl] = useState('')
   const [cardType, setCardType] = useState('monster')
   const [template, setTemplate] = useState('standard')
 
   async function downloadPNG() {
-    const svg = document.getElementById('card-svg') as unknown as SVGSVGElement
+    const svg = document.getElementById('card-svg') as SVGSVGElement | null
     if (!svg) return
-    const svgData = new XMLSerializer().serializeToString(svg)
+
+    let svgContent = svg.outerHTML
+
+    if (imageUrl) {
+      try {
+        const response = await fetch(imageUrl)
+        const blob = await response.blob()
+        const base64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.readAsDataURL(blob)
+        })
+        svgContent = svgContent.replace(imageUrl, base64)
+      } catch (e) {
+        console.warn('Image non convertie:', e)
+      }
+    }
+
+    const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+
     const canvas = document.createElement('canvas')
     canvas.width = 560
     canvas.height = 800
     const ctx = canvas.getContext('2d')!
+
     const img = new Image()
     img.onload = () => {
       ctx.drawImage(img, 0, 0, 560, 800)
+      URL.revokeObjectURL(url)
       const a = document.createElement('a')
       a.download = `${name}.png`
       a.href = canvas.toDataURL('image/png')
       a.click()
     }
-    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
+    img.onerror = () => {
+      const a = document.createElement('a')
+      a.download = `${name}.svg`
+      a.href = url
+      a.click()
+    }
+    img.src = url
   }
 
   function downloadJSON() {
@@ -242,7 +270,7 @@ export default function CardMaker() {
               value={effectDetail}
               onChange={e => setEffectDetail(e.target.value)}
               rows={5}
-              placeholder="Ex: Une fois par tour, durant votre Main Phase : vous pouvez cibler 1 monstre que contrôle votre adversaire ; détruisez-le. Si cette carte détruit un monstre au combat et l'envoie au Cimetière : vous pouvez piocher 1 carte."
+              placeholder="Ex: Une fois par tour, durant votre Main Phase : vous pouvez cibler 1 monstre que contrôle votre adversaire ; détruisez-le..."
               style={{ resize: 'vertical' }}
             />
 
