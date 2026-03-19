@@ -14,51 +14,15 @@ export default function CardMaker() {
   const [cardType, setCardType] = useState('monster')
   const [template, setTemplate] = useState('standard')
 
-  async function downloadPNG() {
-    const svg = document.getElementById('card-svg') as SVGSVGElement | null
+  function downloadSVG() {
+    const svg = document.getElementById('card-svg')
     if (!svg) return
-
-    let svgContent = svg.outerHTML
-
-    if (imageUrl) {
-      try {
-        const response = await fetch(imageUrl)
-        const blob = await response.blob()
-        const base64 = await new Promise<string>((resolve) => {
-          const reader = new FileReader()
-          reader.onload = () => resolve(reader.result as string)
-          reader.readAsDataURL(blob)
-        })
-        svgContent = svgContent.replace(imageUrl, base64)
-      } catch (e) {
-        console.warn('Image non convertie:', e)
-      }
-    }
-
-    const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' })
+    const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' })
     const url = URL.createObjectURL(blob)
-
-    const canvas = document.createElement('canvas')
-    canvas.width = 560
-    canvas.height = 800
-    const ctx = canvas.getContext('2d')!
-
-    const img = new Image()
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, 560, 800)
-      URL.revokeObjectURL(url)
-      const a = document.createElement('a')
-      a.download = `${name}.png`
-      a.href = canvas.toDataURL('image/png')
-      a.click()
-    }
-    img.onerror = () => {
-      const a = document.createElement('a')
-      a.download = `${name}.svg`
-      a.href = url
-      a.click()
-    }
-    img.src = url
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${name}.svg`
+    a.click()
   }
 
   function downloadJSON() {
@@ -264,13 +228,13 @@ export default function CardMaker() {
             </div>
 
             <label>Effet détaillé (gameplay)</label>
-            <div style={{ fontSize: '0.68rem', color: 'rgba(232,224,204,0.3)', marginBottom: '6px' }}>Description complète des mécaniques — visible en cliquant sur la carte en jeu</div>
+            <div style={{ fontSize: '0.68rem', color: 'rgba(232,224,204,0.3)', marginBottom: '6px' }}>Description complète — visible en cliquant sur la carte en jeu</div>
             <textarea
               className="input-field"
               value={effectDetail}
               onChange={e => setEffectDetail(e.target.value)}
               rows={5}
-              placeholder="Ex: Une fois par tour, durant votre Main Phase : vous pouvez cibler 1 monstre que contrôle votre adversaire ; détruisez-le..."
+              placeholder="Ex: Une fois par tour, durant votre Main Phase..."
               style={{ resize: 'vertical' }}
             />
 
@@ -278,10 +242,10 @@ export default function CardMaker() {
 
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
-                onClick={downloadPNG}
+                onClick={downloadSVG}
                 style={{ flex: 1, padding: '11px', background: 'linear-gradient(135deg, #8a6a1e, #c9a84c)', color: '#0a0a14', border: 'none', borderRadius: '4px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'Cinzel, serif', letterSpacing: '0.08em' }}
               >
-                🖼 PNG
+                🖼 SVG
               </button>
               <button
                 onClick={downloadJSON}
@@ -293,7 +257,7 @@ export default function CardMaker() {
 
             {rarity !== 'common' && (
               <div style={{ marginTop: '10px', padding: '8px 12px', background: `rgba(${rarity === 'rare' ? '76,153,201' : rarity === 'epic' ? '155,76,201' : '201,168,76'},0.08)`, border: `1px solid ${rarityColor}40`, borderRadius: '4px', fontSize: '0.68rem', color: rarityColor }}>
-                ✦ {rarity.charAt(0).toUpperCase() + rarity.slice(1)} — cette rareté sera incluse dans le JSON
+                ✦ {rarity.charAt(0).toUpperCase() + rarity.slice(1)} — rareté incluse dans le JSON
               </div>
             )}
           </div>
@@ -304,7 +268,6 @@ export default function CardMaker() {
               Aperçu — {template === 'standard' ? 'Standard' : 'Full Art'}
             </div>
 
-            {/* ── TEMPLATE STANDARD ── */}
             {template === 'standard' && (
               <svg id="card-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 400" width="280" height="400">
                 {sharedDefs}
@@ -361,7 +324,6 @@ export default function CardMaker() {
               </svg>
             )}
 
-            {/* ── TEMPLATE FULL ART ── */}
             {template === 'fullart' && (
               <svg id="card-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 400" width="280" height="400">
                 {sharedDefs}
