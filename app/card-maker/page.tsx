@@ -25,6 +25,7 @@ export default function CardMaker() {
   }
 
   function downloadPNG() {
+    if (typeof window === 'undefined') return
     const svg = document.getElementById('card-svg') as SVGSVGElement | null
     if (!svg) return
     const svgData = new XMLSerializer().serializeToString(svg)
@@ -45,6 +46,7 @@ export default function CardMaker() {
   }
 
   function downloadJSON() {
+    if (typeof window === 'undefined') return
     const data = {
       name,
       card_type: cardType,
