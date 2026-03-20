@@ -375,9 +375,9 @@ export default function GamePage({ params }: { params: { id: string } }) {
 
   function handleMonsterZoneClick(player: 0 | 1, zone: number) {
     if (!gameState) return
-    if (me !== p) return
     const p = gameState.activePlayer
     const opp = p === 0 ? 1 : 0 as 0 | 1
+    if (me !== p) return
 
     if (gameState.pendingTribute && player === p) {
       const fc = gameState.monsterZones[p][zone]; if (!fc) return
