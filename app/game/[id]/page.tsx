@@ -196,7 +196,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
     const s1 = shuffle(deck1), s2 = shuffle(deck2)
     const h1 = s1.splice(0, INITIAL_HAND_SIZE), h2 = s2.splice(0, INITIAL_HAND_SIZE)
     return {
-      phase: 'DRAW', turn: 1, activePlayer: 0,
+      phase: 'MAIN1', turn: 1, activePlayer: 0,
       lp: [STARTING_LP, STARTING_LP],
       hands: [h1, h2],
       monsterZones: [Array(MAX_FIELD_ZONES).fill(null), Array(MAX_FIELD_ZONES).fill(null)],
@@ -205,7 +205,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
       normalSummonedThisTurn: false,
       hasAttackedThisTurn: Array(MAX_FIELD_ZONES).fill(false),
       winner: null,
-      log: ['La partie commence !', 'Tour 1 — Joueur 1', 'Joueur 1 ne pioche pas au 1er tour'],
+      log: ['La partie commence !', 'Tour 1 — Joueur 1'],
       selectedHandCard: null, selectedFieldCard: null, attackingCard: null,
       pendingTribute: null, pendingSummonZone: null, showSummonModal: null
     }
@@ -229,7 +229,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
     if (idx === phases.length - 1) return doEndTurn(state)
     const nextP = phases[idx + 1]
     let s = { ...state, phase: nextP, selectedHandCard: null, selectedFieldCard: null, attackingCard: null }
-    if (nextP === 'DRAW') s = doDrawPhase(s)
+    if (nextP === 'STANDBY') s = doDrawPhase(s)
     if (nextP === 'END') s = doEndPhase(s)
     return addLog(s, `⏭ Phase : ${phaseLabel(nextP)}`)
   }
@@ -271,8 +271,6 @@ export default function GamePage({ params }: { params: { id: string } }) {
       pendingTribute: null, pendingSummonZone: null, showSummonModal: null
     }
     s = addLog(s, `--- Tour ${newTurn} — Joueur ${next + 1} ---`)
-    if (s.decks[next].length === 0) return { ...s, winner: next === 0 ? 1 : 0 as 0 | 1 }
-    s = doDrawPhase(s)
     return addLog(s, `⏭ Phase : ${phaseLabel('DRAW')}`)
   }
 
