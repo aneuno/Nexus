@@ -236,7 +236,6 @@ export default function GamePage({ params }: { params: { id: string } }) {
 
   function doDrawPhase(state: GameState): GameState {
     const p = state.activePlayer
-    if (state.decks[p].length === 0) return { ...state, winner: p === 0 ? 1 : 0 as 0 | 1 }
     const decks = state.decks.map(d => [...d]) as [CardData[], CardData[]]
     const hands = state.hands.map(h => [...h]) as [CardData[], CardData[]]
     const drawn = decks[p].shift()!
@@ -501,12 +500,28 @@ export default function GamePage({ params }: { params: { id: string } }) {
     </div>
   )
 
-  const DeckZone = ({ player }: { player: 0 | 1 }) => (
-    <div style={{ width: '100px', height: '140px', borderRadius: '6px', flexShrink: 0, border: '1px solid rgba(201,168,76,0.2)', background: 'linear-gradient(135deg, #141428, #1a1a35)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-      <span style={{ fontSize: '0.6rem', color: 'rgba(201,168,76,0.4)', fontFamily: 'Rajdhani, sans-serif' }}>DECK</span>
-      <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: '#c9a84c' }}>{gameState.decks[player].length}</span>
-    </div>
-  )
+  const DeckZone = ({ player }: { player: 0 | 1 }) => {
+    const isMe = player === me
+    const canDraw = isMe && gameState.phase === 'DRAW' && gameState.activePlayer === me && gameState.decks[me].length > 0
+    return (
+      <div
+        onClick={() => {
+          if (!canDraw) return
+          setGameState(prev => {
+            if (!prev) return prev
+            const next = doDrawPhase(prev)
+            syncGameState(next)
+            return next
+          })
+        }}
+        style={{ width: '100px', height: '140px', borderRadius: '6px', flexShrink: 0, border: canDraw ? '2px solid #c9a84c' : '1px solid rgba(201,168,76,0.2)', background: 'linear-gradient(135deg, #141428, #1a1a35)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: canDraw ? 'pointer' : 'default', boxShadow: canDraw ? '0 0 12px rgba(201,168,76,0.5)' : 'none', transition: 'all 0.2s', animation: canDraw ? 'pulse 1s ease-in-out infinite' : 'none' }}
+      >
+        <span style={{ fontSize: '0.6rem', color: canDraw ? '#c9a84c' : 'rgba(201,168,76,0.4)', fontFamily: 'Rajdhani, sans-serif' }}>DECK</span>
+        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: '#c9a84c' }}>{gameState.decks[player].length}</span>
+        {canDraw && <span style={{ fontSize: '0.55rem', color: '#c9a84c', fontFamily: 'Rajdhani, sans-serif', animation: 'pulse 1s ease-in-out infinite' }}>PIOCHER</span>}
+      </div>
+    )
+  }
 
   const GraveyardZone = ({ player }: { player: 0 | 1 }) => (
     <div onClick={() => setShowGraveyard({ player })} style={{ width: '100px', height: '140px', borderRadius: '6px', flexShrink: 0, border: '1px solid rgba(201,76,76,0.25)', background: 'rgba(201,76,76,0.04)', cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
