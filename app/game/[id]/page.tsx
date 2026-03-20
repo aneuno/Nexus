@@ -369,11 +369,13 @@ export default function GamePage({ params }: { params: { id: string } }) {
 
   function handleHandCardClick(handIdx: number) {
     if (!gameState || gameState.pendingTribute) return
+    if (me !== p) return
     setGameState(prev => prev ? { ...prev, selectedHandCard: prev.selectedHandCard === handIdx ? null : handIdx, selectedFieldCard: null, attackingCard: null, showSummonModal: null } : prev)
   }
 
   function handleMonsterZoneClick(player: 0 | 1, zone: number) {
     if (!gameState) return
+    if (me !== p) return
     const p = gameState.activePlayer
     const opp = p === 0 ? 1 : 0 as 0 | 1
 
@@ -409,6 +411,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
 
   function handleDeclareAttack() {
     if (!gameState?.selectedFieldCard) return
+    if (me !== p) return
     const { zone } = gameState.selectedFieldCard
     const p = gameState.activePlayer, opp = p === 0 ? 1 : 0 as 0 | 1
     const oppHas = gameState.monsterZones[opp].some(f => f !== null)
@@ -563,7 +566,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
         <div style={{ flex: 1 }} />
         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: phaseColor(gameState.phase), border: `1px solid ${phaseColor(gameState.phase)}50`, borderRadius: '4px', padding: '2px 10px' }}>{phaseLabel(gameState.phase)}</div>
         <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.5)', fontFamily: 'Rajdhani, sans-serif' }}>Tour {gameState.turn} · J{p + 1}</div>
-        <button onClick={() => setGameState(prev => { if (!prev) return prev; const next = doNextPhase(prev); syncGameState(next); return next })} style={{ padding: '5px 14px', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: '#c9a84c', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', cursor: 'pointer' }}>Phase suivante →</button>
+        <button onClick={() => { if (me !== p) return; setGameState(prev => { if (!prev) return prev; const next = doNextPhase(prev); syncGameState(next); return next }) }} style={{ padding: '5px 14px', opacity: me !== p ? 0.3 : 1, cursor: me !== p ? 'not-allowed' : 'pointer', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: '#c9a84c', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', cursor: 'pointer' }}>Phase suivante →</button>
         <button onClick={() => window.location.href = '/play'} style={{ padding: '5px 12px', background: 'transparent', border: '1px solid rgba(201,76,76,0.25)', borderRadius: '4px', color: 'rgba(201,76,76,0.5)', fontSize: '0.72rem', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif' }}>Abandonner</button>
       </div>
 
