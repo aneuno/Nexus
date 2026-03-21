@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -84,7 +84,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
   const [cardBackUrl, setCardBackUrl] = useState('')
   const [hoveredCard, setHoveredCard] = useState<CardData | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
-  const [showGY, setShowGY] = useState<0 | 1 | null>(null)
+  const sessionRef = useRef<any>(null)
 
   function msg(text: string) {
     setFlash(text)
@@ -95,6 +95,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
     async function init() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { window.location.href = '/login'; return }
+      sessionRef.current = session
 
       if (params.id !== 'test') {
         const { data: roomCheck } = await supabase.from('game_rooms').select('host_id').eq('id', params.id).single()
@@ -199,7 +200,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
             const { data: hostDeck } = await supabase
               .from('player_decks')
               .select('id')
-              .eq('player_id', session?.user.id)
+              .eq('player_id', sessionRef.current?.user.id)
               .eq('is_active', true)
               .single()
 
