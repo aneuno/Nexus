@@ -141,9 +141,15 @@ export default function GamePage({ params }: { params: { id: string } }) {
   }, [])
 
   async function loadDeck(deckId: string | null): Promise<CardData[]> {
-    if (!deckId) return []
+    if (!deckId) {
+      const { data: fallback } = await supabase.from('cards').select('*').limit(40)
+      return (fallback || []).map((c: any) => ({ id: c.id, name: c.name, atk: c.atk || 1000, def: c.def || 800, level: c.level || 4, card_type: c.card_type || 'Monstre', image_url: c.image_url || '', rarity: c.rarity || 'common', effect: c.effect, description: c.description }))
+    }
     const { data: deck } = await supabase.from('player_decks').select('cards').eq('id', deckId).single()
-    if (!deck?.cards?.length) return []
+    if (!deck?.cards?.length) {
+      const { data: fallback } = await supabase.from('cards').select('*').limit(40)
+      return (fallback || []).map((c: any) => ({ id: c.id, name: c.name, atk: c.atk || 1000, def: c.def || 800, level: c.level || 4, card_type: c.card_type || 'Monstre', image_url: c.image_url || '', rarity: c.rarity || 'common', effect: c.effect, description: c.description }))
+    }
     const cardIds = deck.cards.map((c: any) => c.card_id)
     const { data: cards } = await supabase.from('cards').select('*').in('id', cardIds)
     const result: CardData[] = []
