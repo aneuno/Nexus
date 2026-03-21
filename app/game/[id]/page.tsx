@@ -115,30 +115,70 @@ export default function GamePage({ params }: { params: { id: string } }) {
       const { data: room } = await supabase.from('game_rooms').select('*').eq('id', params.id).single()
       if (!room) { window.location.href = '/play'; return }
 
-      if (room.game_state) {
+            if (room.game_state) {
         setGameState(room.game_state)
         setLoading(false)
-      } else if (room.host_id === session.user.id) {
-        const d1 = await loadDeck(room.host_deck_id)
-        const d2 = await loadDeck(room.guest_deck_id)
-        const gs = buildGame(d1, d2)
-        await supabase.from('game_rooms').update({ game_state: gs }).eq('id', params.id)
-        setGameState(gs)
-        setLoading(false)
       } else {
-        setLoading(false)
+        setLoading(false) // on laisse le realtime listener s'en occuper
       }
     }
     init()
 
-    if (params.id !== 'test') {
-      const ch = supabase.channel(`game_${params.id}`)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_rooms', filter: `id=eq.${params.id}` }, (payload: any) => {
-          if (payload.new.game_state) { setGameState(payload.new.game_state); setLoading(false) }
-        }).subscribe()
-      return () => { supabase.removeChannel(ch) }
+        if (params.id === 'test') return
+
+    const channel = supabase
+      .channel(`game_${params.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'game_rooms',
+          filter: `id=eq.${params.id}`,
+        },
+        async (payload: any) => {
+          const newRoom = payload.new
+
+          // Si la partie existe déjà → mise à jour normale
+          if (newRoom.game_state) {
+            setGameState(newRoom.game_state)
+            setLoading(false)
+            return
+          }
+
+          // Le host crée la partie SEULEMENT quand les deux decks sont là
+          if (
+            myRole === 0 &&           // je suis le host
+            !gameState &&             // pas encore créé
+            newRoom.host_deck_id &&   // deck hôte présent
+            newRoom.guest_deck_id     // deck invité présent
+          ) {
+            console.log('Host → deux decks détectés, création partie')
+
+            const d1 = await loadDeck(newRoom.host_deck_id)
+            const d2 = await loadDeck(newRoom.guest_deck_id)
+
+            console.log(`Deck J1: ${d1.length} cartes`)
+            console.log(`Deck J2: ${d2.length} cartes`)
+
+            const gs = buildGame(d1, d2)
+
+            await supabase
+              .from('game_rooms')
+              .update({ game_state: gs })
+              .eq('id', params.id)
+
+            setGameState(gs)
+            setLoading(false)
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
     }
-  }, [])
+  }, [params.id])
 
   async function loadDeck(deckId: string | null): Promise<CardData[]> {
     if (!deckId) {
@@ -326,9 +366,11 @@ export default function GamePage({ params }: { params: { id: string } }) {
     })
   }
 
-  if (loading || !gameState) return (
+    if (loading || !gameState) return (
     <main style={{ minHeight: '100vh', background: '#0a0a14', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c9a84c', fontFamily: 'sans-serif' }}>
-      Chargement...
+      {myRole === 0 
+        ? "En attente que l'adversaire sélectionne son deck..." 
+        : "En attente que l'hôte démarre la partie..."}
     </main>
   )
 
@@ -408,20 +450,55 @@ export default function GamePage({ params }: { params: { id: string } }) {
         <div style={{ flex: 1 }} />
         <div style={{ fontSize: '0.72rem', color: 'rgba(201,168,76,0.5)', fontFamily: 'Rajdhani, sans-serif' }}>Tour {gameState.turn} · J{p + 1}</div>
         <div style={{ padding: '3px 12px', borderRadius: '4px', border: `1px solid ${phaseColor(gameState.phase)}60`, color: phaseColor(gameState.phase), fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem' }}>{phaseLabel(gameState.phase)}</div>
-        {isMyTurn && gameState.phase === 'DRAW' && (
-          <button onClick={doDraw} disabled={!canDraw} style={{ padding: '5px 14px', background: canDraw ? 'rgba(76,153,201,0.2)' : 'transparent', border: `1px solid ${canDraw ? '#4c99c9' : 'rgba(76,153,201,0.2)'}`, borderRadius: '4px', color: canDraw ? '#4c99c9' : 'rgba(76,153,201,0.3)', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', cursor: canDraw ? 'pointer' : 'default', animation: canDraw ? 'pulse 1s ease-in-out infinite' : 'none' }}>
-            🃏 Piocher
-          </button>
-        )}
-        {isMyTurn && gameState.phase !== 'DRAW' && (
-          <button onClick={nextPhase} style={{ padding: '5px 14px', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', color: '#c9a84c', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', cursor: 'pointer' }}>
-            {gameState.phase === 'END' ? 'Fin du tour →' : 'Phase suiv. →'}
-          </button>
-        )}
-        {!isMyTurn && (
-          <div style={{ padding: '5px 14px', background: 'transparent', border: '1px solid rgba(201,168,76,0.1)', borderRadius: '4px', color: 'rgba(201,168,76,0.3)', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem' }}>
-            Tour adversaire...
-          </div>
+                {isMyTurn && (
+          <>
+            {/* Bouton Piocher (seulement avant d'avoir pioché) */}
+            {gameState.phase === 'DRAW' && !gameState.hasDrawnThisTurn && (
+              <button 
+                onClick={doDraw} 
+                disabled={!canDraw} 
+                style={{ 
+                  padding: '5px 14px', 
+                  background: canDraw ? 'rgba(76,153,201,0.2)' : 'transparent', 
+                  border: `1px solid ${canDraw ? '#4c99c9' : 'rgba(76,153,201,0.2)'}`, 
+                  borderRadius: '4px', 
+                  color: canDraw ? '#4c99c9' : 'rgba(76,153,201,0.3)', 
+                  fontFamily: 'Rajdhani, sans-serif', 
+                  fontSize: '0.78rem', 
+                  cursor: canDraw ? 'pointer' : 'default', 
+                  animation: canDraw ? 'pulse 1s ease-in-out infinite' : 'none' 
+                }}
+              >
+                🃏 Piocher
+              </button>
+            )}
+
+            {/* Bouton "Phase suiv." après avoir pioché (même en phase DRAW) */}
+            {(gameState.phase === 'DRAW' && gameState.hasDrawnThisTurn) || gameState.phase !== 'DRAW' ? (
+              <button 
+                onClick={nextPhase} 
+                style={{ 
+                  padding: '5px 14px', 
+                  background: 'rgba(201,168,76,0.1)', 
+                  border: '1px solid rgba(201,168,76,0.3)', 
+                  borderRadius: '4px', 
+                  color: '#c9a84c', 
+                  fontFamily: 'Rajdhani, sans-serif', 
+                  fontSize: '0.78rem', 
+                  cursor: 'pointer' 
+                }}
+              >
+                {gameState.phase === 'END' ? 'Fin du tour →' : 'Phase suiv. →'}
+              </button>
+            ) : null}
+
+            {/* Message quand ce n'est pas ton tour */}
+            {!isMyTurn && (
+              <div style={{ padding: '5px 14px', background: 'transparent', border: '1px solid rgba(201,168,76,0.1)', borderRadius: '4px', color: 'rgba(201,168,76,0.3)', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem' }}>
+                Tour adversaire...
+              </div>
+            )}
+          </>
         )}
         <button onClick={() => window.location.href = '/play'} style={{ padding: '5px 12px', background: 'transparent', border: '1px solid rgba(201,76,76,0.25)', borderRadius: '4px', color: 'rgba(201,76,76,0.5)', fontSize: '0.72rem', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif' }}>Quitter</button>
       </div>
