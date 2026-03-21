@@ -85,6 +85,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
   const [hoveredCard, setHoveredCard] = useState<CardData | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
   const sessionRef = useRef<any>(null)
+  const [showGY, setShowGY] = useState<0 | 1 | null>(null)
 
   function msg(text: string) {
     setFlash(text)
