@@ -142,21 +142,29 @@ export default function GamePage({ params }: { params: { id: string } }) {
 
   async function loadDeck(deckId: string | null): Promise<CardData[]> {
     if (!deckId) {
-      const { data: fallback } = await supabase.from('cards').select('*').limit(40)
-      return (fallback || []).map((c: any) => ({ id: c.id, name: c.name, atk: c.atk || 1000, def: c.def || 800, level: c.level || 4, card_type: c.card_type || 'Monstre', image_url: c.image_url || '', rarity: c.rarity || 'common', effect: c.effect, description: c.description }))
+      const { data: fallback } = await supabase.from('cards').select('*').limit(60)
+      return (fallback || []).map((c: any) => ({ id: c.id + '_0', name: c.name, atk: c.atk || 1000, def: c.def || 800, level: c.level || 4, card_type: c.card_type || 'Monstre', image_url: c.image_url || '', rarity: c.rarity || 'common', effect: c.effect, description: c.description }))
     }
     const { data: deck } = await supabase.from('player_decks').select('cards').eq('id', deckId).single()
     if (!deck?.cards?.length) {
-      const { data: fallback } = await supabase.from('cards').select('*').limit(40)
-      return (fallback || []).map((c: any) => ({ id: c.id, name: c.name, atk: c.atk || 1000, def: c.def || 800, level: c.level || 4, card_type: c.card_type || 'Monstre', image_url: c.image_url || '', rarity: c.rarity || 'common', effect: c.effect, description: c.description }))
+      const { data: fallback } = await supabase.from('cards').select('*').limit(60)
+      return (fallback || []).map((c: any) => ({ id: c.id + '_0', name: c.name, atk: c.atk || 1000, def: c.def || 800, level: c.level || 4, card_type: c.card_type || 'Monstre', image_url: c.image_url || '', rarity: c.rarity || 'common', effect: c.effect, description: c.description }))
     }
-    const cardIds = deck.cards.map((c: any) => c.card_id)
+    const cardIds = [...new Set(deck.cards.map((c: any) => c.card_id))]
     const { data: cards } = await supabase.from('cards').select('*').in('id', cardIds)
+    if (!cards?.length) {
+      const { data: fallback } = await supabase.from('cards').select('*').limit(60)
+      return (fallback || []).map((c: any) => ({ id: c.id + '_0', name: c.name, atk: c.atk || 1000, def: c.def || 800, level: c.level || 4, card_type: c.card_type || 'Monstre', image_url: c.image_url || '', rarity: c.rarity || 'common', effect: c.effect, description: c.description }))
+    }
     const result: CardData[] = []
     for (const entry of deck.cards) {
-      const card = cards?.find((c: any) => c.id === entry.card_id)
-      if (card) for (let i = 0; i < entry.quantity; i++)
-        result.push({ id: card.id + '_' + i, name: card.name, atk: card.atk || 1000, def: card.def || 800, level: card.level || 4, card_type: card.card_type || 'Monstre', image_url: card.image_url || '', rarity: card.rarity || 'common', effect: card.effect, description: card.description })
+      const card = cards.find((c: any) => c.id === entry.card_id)
+      if (card) {
+        const qty = Math.max(1, entry.quantity || 1)
+        for (let i = 0; i < qty; i++) {
+          result.push({ id: `${card.id}_${result.length}`, name: card.name, atk: card.atk || 1000, def: card.def || 800, level: card.level || 4, card_type: card.card_type || 'Monstre', image_url: card.image_url || '', rarity: card.rarity || 'common', effect: card.effect, description: card.description })
+        }
+      }
     }
     return result
   }
