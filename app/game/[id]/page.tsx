@@ -150,7 +150,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
       const { data: fallback } = await supabase.from('cards').select('*').limit(60)
       return (fallback || []).map((c: any) => ({ id: c.id + '_0', name: c.name, atk: c.atk || 1000, def: c.def || 800, level: c.level || 4, card_type: c.card_type || 'Monstre', image_url: c.image_url || '', rarity: c.rarity || 'common', effect: c.effect, description: c.description }))
     }
-    const cardIds = [...new Set(deck.cards.map((c: any) => c.card_id))]
+    const cardIds = Array.from(new Set(deck.cards.map((c: any) => c.card_id))) as string[]
     const { data: cards } = await supabase.from('cards').select('*').in('id', cardIds)
     if (!cards?.length) {
       const { data: fallback } = await supabase.from('cards').select('*').limit(60)
