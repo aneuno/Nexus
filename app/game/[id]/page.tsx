@@ -163,7 +163,9 @@ export default function GamePage({ params }: { params: { id: string } }) {
 
   function buildGame(deck1: CardData[], deck2: CardData[]): GameState {
     const s1 = shuffle(deck1), s2 = shuffle(deck2)
-    const h1 = s1.splice(0, HAND_SIZE), h2 = s2.splice(0, HAND_SIZE)
+    const drawSize1 = Math.min(HAND_SIZE, s1.length)
+    const drawSize2 = Math.min(HAND_SIZE, s2.length)
+    const h1 = s1.splice(0, drawSize1), h2 = s2.splice(0, drawSize2)
     return {
       phase: 'MAIN1', turn: 1, activePlayer: 0,
       lp: [STARTING_LP, STARTING_LP],
