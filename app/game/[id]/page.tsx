@@ -115,18 +115,60 @@ export default function GamePage({ params }: { params: { id: string } }) {
       const { data: room } = await supabase.from('game_rooms').select('*').eq('id', params.id).single()
       if (!room) { window.location.href = '/play'; return }
 
-            if (room.game_state) {
+                  if (room.game_state) {
         setGameState(room.game_state)
         setLoading(false)
+      } else if (room.host_id === session.user.id) {
+        // Host : lance la partie dès que le guest est là (guest_id existe)
+        if (room.guest_id) {
+          console.log("Host détecte guest_id → chargement decks actifs et lancement partie")
+
+          // Deck actif du host
+          const { data: hostDeck } = await supabase
+            .from('player_decks')
+            .select('id')
+            .eq('player_id', session.user.id)
+            .eq('is_active', true)
+            .single()
+
+          // Deck actif du guest
+          const { data: guestDeck } = await supabase
+            .from('player_decks')
+            .select('id')
+            .eq('player_id', room.guest_id)
+            .eq('is_active', true)
+            .single()
+
+          if (!hostDeck?.id || !guestDeck?.id) {
+            msg("Erreur : un joueur n'a pas de deck actif sélectionné")
+            setLoading(false)
+            return
+          }
+
+          const d1 = await loadDeck(hostDeck.id)
+          const d2 = await loadDeck(guestDeck.id)
+
+          console.log(`Deck Host chargé : ${d1.length} cartes`)
+          console.log(`Deck Guest chargé : ${d2.length} cartes`)
+
+          const gs = buildGame(d1, d2)
+          await supabase.from('game_rooms').update({ game_state: gs }).eq('id', params.id)
+          setGameState(gs)
+          setLoading(false)
+        } else {
+          console.log("Host attend que le guest rejoigne (guest_id manquant)")
+          setLoading(false)
+        }
       } else {
-        setLoading(false) // on laisse le realtime listener s'en occuper
+        console.log("Guest attend que le host crée le game_state")
+        setLoading(false)
       }
     }
     init()
 
         if (params.id === 'test') return
 
-    const channel = supabase
+        const channel = supabase
       .channel(`game_${params.id}`)
       .on(
         'postgres_changes',
@@ -139,37 +181,45 @@ export default function GamePage({ params }: { params: { id: string } }) {
         async (payload: any) => {
           const newRoom = payload.new
 
-          // Si la partie existe déjà → mise à jour normale
           if (newRoom.game_state) {
             setGameState(newRoom.game_state)
             setLoading(false)
             return
           }
 
-          // Le host crée la partie SEULEMENT quand les deux decks sont là
+          // Host détecte que le guest a rejoint → lance la partie
           if (
-            myRole === 0 &&           // je suis le host
-            !gameState &&             // pas encore créé
-            newRoom.host_deck_id &&   // deck hôte présent
-            newRoom.guest_deck_id     // deck invité présent
+            myRole === 0 &&
+            !gameState &&
+            newRoom.guest_id &&
+            !newRoom.game_state
           ) {
-            console.log('Host → deux decks détectés, création partie')
+            console.log("Realtime : guest rejoint → host lance la partie")
 
-            const d1 = await loadDeck(newRoom.host_deck_id)
-            const d2 = await loadDeck(newRoom.guest_deck_id)
+            const { data: hostDeck } = await supabase
+              .from('player_decks')
+              .select('id')
+              .eq('player_id', session?.user.id)
+              .eq('is_active', true)
+              .single()
 
-            console.log(`Deck J1: ${d1.length} cartes`)
-            console.log(`Deck J2: ${d2.length} cartes`)
+            const { data: guestDeck } = await supabase
+              .from('player_decks')
+              .select('id')
+              .eq('player_id', newRoom.guest_id)
+              .eq('is_active', true)
+              .single()
 
-            const gs = buildGame(d1, d2)
-
-            await supabase
-              .from('game_rooms')
-              .update({ game_state: gs })
-              .eq('id', params.id)
-
-            setGameState(gs)
-            setLoading(false)
+            if (hostDeck?.id && guestDeck?.id) {
+              const d1 = await loadDeck(hostDeck.id)
+              const d2 = await loadDeck(guestDeck.id)
+              const gs = buildGame(d1, d2)
+              await supabase.from('game_rooms').update({ game_state: gs }).eq('id', params.id)
+              setGameState(gs)
+              setLoading(false)
+            } else {
+              console.log("Erreur realtime : deck actif manquant pour un joueur")
+            }
           }
         }
       )
